@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上市包檢驗工作台｜ChatGPT與Gemini職場AI應用實務班 D14</title>
+<meta name="description" content="五階段引導填寫：依 13 個零件的及格標準逐項檢驗上市包，算出完成數是否達 80%，最後下載《上市包檢驗報告》PDF。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- rough.js 同步載入：診斷視覺化在第一次渲染就要用；其餘函式庫 defer，未載入時各功能自動降級 -->
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/rough-notation@0.5.1/lib/rough-notation.iife.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ======================================================
+   設計系統：手繪筆記本版面（色票、字型、裝飾在下方 THEME 區塊）
+   ====================================================== */
+:root{
+  --navy:var(--ink); --teal:var(--blue); --primary:var(--red);
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Segoe UI",sans-serif;
+  --sh:3px 3px 0 var(--ink); --sh-s:2px 2px 0 var(--ink);
+  --r-hand:255px 15px 225px 15px/15px 225px 15px 255px;
+  --r-card:16px 5px 14px 6px/6px 14px 5px 16px;
+  --topbar-h:62px; --sidebar-w:278px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.7;background:var(--paper)}
+a{color:var(--blue)}
+h1,h2,h3,h4{margin:0 0 .5em;line-height:1.3;color:var(--ink);font-family:var(--hand);font-weight:700}
+h1{font-size:28px} h2{font-size:21px} h3{font-size:17px} h4{font-size:15px;color:var(--ink-2)}
+p{margin:0 0 .8em}
+small{font-size:12.5px}
+code,.mono{font-family:var(--type);font-size:.9em;background:var(--paper-3);padding:1px 5px;border-radius:3px}
+button{font-family:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+::placeholder{color:var(--muted-2)}
+::selection{background:var(--yellow-soft)}
+
+/* ---------- 頂部列：墨色底（下緣裝飾 .topbar::after 在 THEME） ---------- */
+.topbar{position:sticky;top:0;z-index:50;height:var(--topbar-h);background:var(--ink);color:var(--paper-2);display:flex;align-items:center;gap:14px;padding:0 18px}
+.topbar .brand{display:flex;align-items:center;gap:11px;font-family:var(--hand);font-weight:700;font-size:18px;letter-spacing:.5px;white-space:nowrap}
+.topbar .brand .logo{width:38px;height:38px;border-radius:7px 3px 8px 4px;background:var(--paper-2);color:var(--ink);display:grid;place-items:center;font-size:21px;font-weight:700;transform:rotate(-4deg);box-shadow:2px 2px 0 var(--red)}
+.topbar .brand .sub{font-family:var(--font);font-weight:400;font-size:11.5px;opacity:.7;display:block;line-height:1.2;letter-spacing:0}
+.topbar .spacer{flex:1}
+.topbar .progress{display:flex;align-items:center;gap:10px;font-family:var(--type);font-size:12.5px;min-width:190px}
+.topbar .progress .bar{flex:1;height:10px;border:1.5px solid var(--paper-2);border-radius:2px;overflow:hidden;background:repeating-linear-gradient(90deg,transparent 0 9px,rgba(var(--paper-rgb),.25) 9px 10px)}
+.topbar .progress .bar i{display:block;height:100%;background:var(--yellow);width:0;transition:width .5s}
+.topbar .btn{background:transparent;color:var(--paper-2);border:1.5px solid rgba(var(--paper-rgb),.55);box-shadow:none}
+.topbar .btn:hover{background:rgba(var(--paper-rgb),.12);color:#fff;transform:none;box-shadow:none}
+.topbar .menu-btn{display:none}
+
+/* ---------- 版面：深色側欄（底紋在 THEME） ---------- */
+.app{display:flex;min-height:calc(100vh - var(--topbar-h))}
+.sidebar{width:var(--sidebar-w);flex:0 0 auto;padding:22px 26px;position:sticky;top:var(--topbar-h);height:calc(100vh - var(--topbar-h));overflow:auto;color:var(--paper-2);background-color:var(--dark)}
+.sidebar .sb-title{font-family:var(--type);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--on-dark-muted);margin:6px 4px 10px}
+.sidebar .muted{color:var(--on-dark-muted)}
+.main{flex:1;min-width:0;padding:32px 34px 40px}
+.container{max-width:1180px;margin:0 auto}
+.step{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;margin-bottom:6px;border-radius:3px;cursor:pointer;border:1.5px solid var(--dark-line);background:var(--dark-2);transition:.15s;position:relative}
+.step:hover{background:var(--dark-3)}
+.step.active{background:var(--paper-2);border-color:var(--paper-2)}
+.step.active .lbl{color:var(--ink)} .step.active .en{color:var(--muted)}
+.step.locked{opacity:.45;cursor:not-allowed}
+.step .num{width:28px;height:28px;border-radius:3px;display:grid;place-items:center;font-family:var(--type);font-size:13px;flex:0 0 auto;background:var(--dark-line);color:var(--paper-2)}
+.step.done .num{background:var(--green);color:#fff}
+.step.current .num{background:var(--yellow);color:var(--ink)}
+.step .lbl{font-family:var(--hand);font-size:15px;font-weight:700;color:var(--paper-2);line-height:1.3}
+.step .en{font-family:var(--type);font-size:10.5px;color:var(--on-dark-dim);display:block;margin-top:2px}
+.step .st{font-size:10.5px;margin-top:4px;display:inline-block;padding:0 7px;border-radius:2px;background:var(--dark-line);color:var(--on-dark)}
+.step.done .st{background:var(--green);color:#fff}
+.step.current .st{background:var(--yellow);color:var(--ink)}
+.step.active .st{outline:1px solid var(--ink-2)}
+.sb-home{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:3px;cursor:pointer;font-family:var(--hand);font-weight:700;font-size:15px;color:var(--paper-2);border:1.5px dashed var(--dark-dash)}
+.sb-home:hover{background:var(--dark-3)}
+.sb-home.active{background:var(--paper-2);color:var(--ink);border-style:solid}
+.sb-sep{height:0;border-top:1.5px dashed var(--dark-line);margin:12px 2px}
+.sidebar .btn{background:var(--dark-2);color:var(--paper-2);border-color:var(--dark-dash);box-shadow:none}
+.sidebar .btn:hover{background:var(--dark-3);transform:none;box-shadow:none}
+.sidebar .btn.danger{color:var(--on-dark-danger)}
+
+/* ---------- 卡片與元件 ---------- */
+.card{background:var(--card);border:2px solid var(--ink);border-radius:var(--r-card);box-shadow:4px 4px 0 var(--ink);padding:22px 24px;margin-bottom:22px}
+.card.tight{padding:14px 18px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.card-h h2{margin:0}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 17px;border-radius:var(--r-hand);border:2px solid var(--ink);background:var(--card);color:var(--ink);font-weight:700;font-size:14px;cursor:pointer;transition:transform .12s,box-shadow .12s;line-height:1.2;white-space:nowrap;box-shadow:var(--sh-s)}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn.primary{background:var(--red);color:#fff}
+.btn.teal{background:var(--blue);color:#fff}
+.btn.danger{color:var(--red);border-color:var(--red);box-shadow:2px 2px 0 var(--red)}
+.btn.ghost{background:transparent;border-style:dashed;box-shadow:none}
+.btn.ghost:hover{box-shadow:none;background:rgba(var(--ink-rgb),.05)}
+.btn.sm{padding:5px 11px;font-size:12.5px;box-shadow:1.5px 1.5px 0 var(--ink)}
+.btn.lg{padding:12px 24px;font-size:16px;font-family:var(--hand)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:1px 9px;border-radius:3px;font-size:11.5px;font-weight:700;letter-spacing:.3px;line-height:1.7;white-space:nowrap;border:1.5px solid currentColor}
+.badge.ex{background:var(--paper-3);color:var(--muted)}
+.badge.in{background:var(--blue-soft);color:var(--blue)}
+.badge.dx{background:var(--green-soft);color:var(--green)}
+.badge.hy{background:var(--yellow-soft);color:var(--yellow-ink)}
+.badge.g{background:var(--green-soft);color:var(--green)} .badge.y{background:var(--yellow-soft);color:var(--yellow-ink)} .badge.r{background:var(--red-soft);color:var(--red)}
+.badge.navy{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
+.pill{display:inline-block;padding:2px 11px;border-radius:var(--r-hand);background:var(--paper-2);border:1.5px solid var(--ink-2);font-size:12.5px;color:var(--ink-2)}
+.kpi{background:var(--paper-2);border:2px dashed var(--ink-2);border-radius:6px;padding:13px 15px;position:relative}
+.kpi .v{font-family:var(--hand);font-size:28px;font-weight:700;color:var(--ink);line-height:1.15}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi.g{border-left:7px solid var(--green)} .kpi.y{border-left:7px solid var(--yellow)} .kpi.r{border-left:7px solid var(--red)} .kpi.b{border-left:7px solid var(--blue)}
+.light{display:inline-block;width:15px;height:15px;border-radius:50%;vertical-align:middle;border:2px solid var(--ink)}
+.light.g{background:var(--green)} .light.y{background:var(--yellow)} .light.r{background:var(--red)} .light.n{background:var(--paper-3)}
+.note{background:var(--blue-soft);border:1.5px solid var(--ink-2);border-left:6px solid var(--blue);padding:10px 14px;border-radius:2px 8px 8px 2px;font-size:13.5px;margin:10px 0;box-shadow:2px 3px 0 rgba(var(--ink-rgb),.12)}
+.note.warn{border-left-color:var(--yellow);background:var(--yellow-soft)}
+.note.ok{border-left-color:var(--green);background:var(--green-soft)}
+.note.err{border-left-color:var(--red);background:var(--red-soft)}
+.note.gray{border-left-color:var(--muted-2);background:var(--paper-2)}
+.muted{color:var(--muted)} .small{font-size:12.5px} .tiny{font-size:11.5px}
+.right{text-align:right} .center{text-align:center}
+.mt0{margin-top:0}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mb0{margin-bottom:0}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}
+.flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sb{justify-content:space-between}
+hr.sep{border:0;border-top:1.5px dashed var(--line-2);margin:16px 0}
+ul.clean{padding-left:18px;margin:4px 0}
+ul.clean li{margin:3px 0}
+ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:0}
+ol.steps li{position:relative;padding:9px 0 9px 44px;border-bottom:1.5px dashed var(--line);counter-increment:s}
+ol.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:9px;width:32px;height:26px;border:2px solid var(--ink);border-radius:3px;background:var(--yellow-soft);color:var(--ink);font-family:var(--type);font-size:12px;display:grid;place-items:center}
+ol.steps li:last-child{border-bottom:0}
+
+/* 表格 */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th,.tbl td{border:1px solid var(--line-2);padding:8px 10px;text-align:left;vertical-align:top}
+.tbl th{background:var(--paper-3);font-family:var(--hand);font-weight:700;color:var(--ink);font-size:13.5px;white-space:nowrap}
+.tbl tr:nth-child(even) td{background:rgba(var(--paper3-rgb),.3)}
+.tbl.compact th,.tbl.compact td{padding:5px 8px;font-size:12.5px}
+.tbl-wrap{overflow:auto;border-radius:4px;border:2px solid var(--ink)}
+.tbl-wrap .tbl{border:0}
+.tbl-wrap .tbl th:first-child,.tbl-wrap .tbl td:first-child{border-left:0}
+.tbl-wrap .tbl th:last-child,.tbl-wrap .tbl td:last-child{border-right:0}
+.tbl-wrap .tbl tr:first-child th{border-top:0}
+.tbl-wrap .tbl tr:last-child td{border-bottom:0}
+
+/* 表單：橫線紙上填寫 */
+.field{margin-bottom:18px}
+.field label.lbl{display:flex;align-items:center;gap:6px;font-family:var(--hand);font-weight:700;font-size:15.5px;color:var(--ink);margin-bottom:5px;flex-wrap:wrap}
+.field .req{color:var(--red);font-weight:800}
+.field .help{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.field .ex{font-size:12px;color:var(--muted-2);padding:4px 2px 0;line-height:1.55}
+.field .ex b{color:var(--muted);font-weight:700;font-family:var(--type);font-size:11px;letter-spacing:.5px;margin-right:2px}
+.field input[type=text],.field input[type=number],.field select,.field textarea{width:100%;padding:9px 11px;border:2px solid var(--ink-2);border-radius:7px 3px 6px 4px;background:var(--field-bg);outline:none;transition:.15s}
+.field textarea{min-height:92px;resize:vertical;line-height:28px;padding-top:6px;background:var(--field-bg) linear-gradient(transparent 27px,var(--line) 27px) 0 6px/100% 28px local}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink);box-shadow:3px 3px 0 var(--yellow)}
+.field.invalid input,.field.invalid select,.field.invalid textarea,.field.invalid .tbl-wrap{border-color:var(--red);box-shadow:3px 3px 0 var(--red-soft)}
+.field .err-msg{display:none;color:var(--red);font-size:12.5px;margin-top:4px;font-weight:700}
+.field.invalid .err-msg{display:block}
+.chk-group{display:flex;flex-wrap:wrap;gap:8px}
+.chk{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--ink-2);border-radius:var(--r-hand);background:var(--field-bg);cursor:pointer;font-size:13px;user-select:none}
+.chk input{margin:0;accent-color:var(--red)}
+.chk.on{background:var(--yellow-soft);border:2px solid var(--ink);font-weight:700;box-shadow:var(--sh-s)}
+.likert{display:flex;gap:4px;flex-wrap:wrap}
+.likert label{flex:1;min-width:46px;text-align:center;border:1.5px solid var(--ink-2);border-radius:4px;padding:6px 4px;cursor:pointer;font-size:12.5px;background:var(--field-bg)}
+.likert label.on{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
+.likert input{display:none}
+.tbl-edit input,.tbl-edit select,.tbl-edit textarea{width:100%;min-width:90px;padding:6px 8px;border:1.5px solid var(--line-2);border-radius:4px;background:var(--field-bg);font-size:13px}
+.tbl-edit textarea{min-height:40px;resize:vertical}
+.tbl-edit td{padding:5px 6px;vertical-align:middle}
+.tbl-edit td.calc{font-weight:700;text-align:center;background:var(--paper-3);white-space:nowrap;font-family:var(--type)}
+.tbl-edit .rm{border:0;background:transparent;color:var(--muted-2);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px}
+.tbl-edit .rm:hover{color:var(--red);background:var(--red-soft)}
+.form-section{border:1.5px solid var(--ink-2);border-radius:6px 3px 7px 4px;padding:16px 18px;margin-bottom:18px;background:var(--paper-2)}
+.form-section>h3{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px dashed var(--line-2);flex-wrap:wrap}
+.form-section>h3 .n{width:28px;height:28px;border-radius:3px;background:var(--ink);color:var(--paper-2);font-family:var(--type);font-size:13px;display:grid;place-items:center}
+
+/* 分頁：筆記本索引標籤 */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--ink);margin-bottom:22px;overflow-x:auto;padding:4px 4px 0}
+.tab{padding:8px 15px;font-family:var(--hand);font-weight:700;font-size:15px;color:var(--muted);cursor:pointer;border:2px solid var(--ink-2);border-bottom:0;border-radius:9px 9px 0 0;background:var(--paper-3);white-space:nowrap;display:flex;align-items:center;gap:6px;position:relative;top:2px}
+.tab:hover{color:var(--ink);background:var(--paper-2)}
+.tab.active{color:var(--red);background:var(--card);border-color:var(--ink);border-bottom:2px solid var(--card);z-index:1}
+.tab .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted-2)}
+.tab.has .dot{background:var(--green);border-color:var(--green)}
+.tabpanel{display:none}.tabpanel.active{display:block}
+
+/* 階段標頭（.big::before 裝飾在 THEME） */
+.stage-hero{display:flex;gap:22px;align-items:flex-start;background:var(--card);border:2px solid var(--ink);border-radius:var(--r-card);padding:24px 24px 20px;margin-bottom:20px;box-shadow:4px 4px 0 var(--ink);position:relative}
+.stage-hero .big{width:66px;height:58px;margin-top:14px;border-radius:2px 2px 6px 6px;background:var(--ink);color:var(--paper-2);font-family:var(--type);font-size:28px;display:grid;place-items:center;flex:0 0 auto;position:relative}
+.stage-hero h1{font-size:27px;margin-bottom:0}
+.stage-hero .en{font-family:var(--type);color:var(--muted);font-size:12.5px;margin-bottom:8px;letter-spacing:.5px}
+.stage-hero .goal{font-size:14px;color:var(--ink-2)}
+
+/* 首頁主視覺（.slate-clap 頂條裝飾在 THEME） */
+.slate{border:2px solid var(--ink);border-radius:6px;box-shadow:5px 5px 0 var(--ink);margin-bottom:24px;overflow:hidden;background:var(--ink);color:var(--paper-2)}
+.slate-body{display:grid;grid-template-columns:1.35fr 1fr;gap:26px;padding:26px 28px 28px;align-items:center}
+.slate .eyebrow{font-family:var(--type);font-size:12.5px;letter-spacing:2.5px;color:var(--yellow)}
+.slate h1{color:var(--paper-2);font-size:36px;margin:6px 0 10px}
+.slate .lead{color:var(--on-dark-2);font-size:15px;max-width:640px}
+.slate-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid rgba(var(--paper-rgb),.5);margin:14px 0 18px}
+.slate-grid div{padding:7px 10px;border-right:1.5px solid rgba(var(--paper-rgb),.5)}
+.slate-grid div:last-child{border-right:0}
+.slate-grid b{display:block;font-family:var(--type);font-weight:400;font-size:10.5px;letter-spacing:1.5px;color:var(--on-dark-muted)}
+.slate-grid span{font-family:var(--hand);font-size:19px;font-weight:700}
+.slate .btn{box-shadow:2px 2px 0 var(--paper-2);border-color:var(--paper-2)}
+.slate .btn:hover{box-shadow:3px 3px 0 var(--paper-2)}
+.slate .btn.ghost{color:var(--paper-2)}
+.slate-art{margin:0;background:var(--paper-2);border-radius:4px;padding:10px;transform:rotate(1.5deg);box-shadow:4px 4px 0 rgba(0,0,0,.35)}
+.slate-art img,.slate-art svg{display:block;width:100%;height:auto;border-radius:2px}
+.slate-art figcaption{font-family:var(--hand);color:var(--ink-2);font-size:13px;text-align:center;margin-top:6px}
+.hero{background:var(--card);border:2px solid var(--ink);border-radius:var(--r-card);padding:28px 30px;margin-bottom:22px;box-shadow:4px 4px 0 var(--ink)}
+.hero .eyebrow{font-family:var(--type);font-size:12px;letter-spacing:2px;color:var(--red)}
+.hero h1{font-size:32px;margin:6px 0 8px}
+.hero .lead{font-size:15.5px;color:var(--muted);max-width:760px}
+.reel{background-color:var(--ink);border-radius:4px;padding:20px 10px;overflow-x:auto}
+.reel .stage-tiles{display:grid;grid-template-columns:repeat(var(--n,9),minmax(104px,1fr));gap:6px}
+.stage-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tile{border:2px solid transparent;border-radius:3px;padding:10px 9px 9px;background:var(--paper-2);cursor:pointer;transition:transform .15s;position:relative;display:flex;flex-direction:column;gap:3px;min-height:128px}
+.tile:hover{transform:translateY(-3px)}
+.tile.now{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(var(--yellow-rgb),.35)}
+.tile.locked{opacity:.55}
+.tile .n{font-family:var(--type);font-size:11px;color:var(--muted);letter-spacing:1px}
+.tile b{display:block;font-family:var(--hand);font-size:16px;color:var(--ink);line-height:1.25}
+.tile span{font-size:11px;color:var(--muted)}
+.tile .st{margin-top:auto;align-self:flex-start}
+.profile{display:grid;grid-template-columns:170px 1fr;gap:22px;align-items:start}
+.avatar-wrap{position:relative;border-radius:4px;overflow:hidden;background:var(--blue);aspect-ratio:368/430;border:2px solid var(--ink);box-shadow:var(--sh);transform:rotate(-2deg)}
+.avatar-wrap svg{width:100%;height:100%;display:block}
+.avatar-wrap .corner{position:absolute;width:20px;height:20px;border:3px solid var(--yellow)}
+.avatar-wrap .c1{top:7px;left:7px;border-right:0;border-bottom:0}.avatar-wrap .c2{top:7px;right:7px;border-left:0;border-bottom:0}.avatar-wrap .c3{bottom:7px;left:7px;border-right:0;border-top:0}.avatar-wrap .c4{bottom:7px;right:7px;border-left:0;border-top:0}
+.profile .meta{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px;margin-top:10px}
+.profile .meta dt{color:var(--muted);font-weight:700;white-space:nowrap;font-family:var(--hand)}
+.profile .meta dd{margin:0}
+.pain{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border:1.5px dashed var(--ink-2);border-radius:5px;background:var(--paper-2)}
+.pain .ic{width:40px;height:30px;border:2px solid var(--red);border-radius:3px;color:var(--red);font-family:var(--type);display:grid;place-items:center;flex:0 0 auto;font-size:13px;transform:rotate(-6deg)}
+.pain b{display:block;color:var(--ink);margin-bottom:1px;font-family:var(--hand);font-size:15.5px}
+.pain span{font-size:13px;color:var(--muted)}
+.legend{display:flex;gap:10px;flex-wrap:wrap}
+.legend .it{display:flex;align-items:center;gap:8px;padding:6px 11px;border:1.5px dashed var(--line-2);border-radius:4px;background:var(--paper-2);font-size:13px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.flow .fx{padding:4px 10px;border-radius:var(--r-hand);background:var(--paper-2);border:1.5px solid var(--ink-2);font-size:13px;font-weight:700}
+.flow .ar{color:var(--muted-2)}
+
+/* 診斷結果 */
+.dx-block{border:1.5px solid var(--ink-2);border-radius:6px 3px 7px 4px;padding:16px 18px;margin-bottom:16px;background:var(--paper-2)}
+.dx-block h3{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.dx-item{display:flex;gap:10px;padding:9px 0;border-bottom:1.5px dashed var(--line);font-size:13.5px}
+.dx-item:last-child{border-bottom:0}
+.dx-item .sev{flex:0 0 auto;width:11px;height:11px;border-radius:50%;margin-top:7px;border:1.5px solid var(--ink)}
+.sev.h{background:var(--red)} .sev.m{background:var(--yellow)} .sev.l{background:var(--green)} .sev.i{background:var(--blue)}
+.dx-item .rule{font-family:var(--type);font-size:11px;color:var(--ink-2);background:var(--paper-3);border:1px solid var(--line-2);padding:0 6px;border-radius:2px;white-space:nowrap;align-self:flex-start;margin-top:3px}
+.score-ring{display:flex;align-items:center;gap:18px}
+.ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;position:relative;flex:0 0 auto;border:2px solid var(--ink)}
+.ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--card);border:2px solid var(--ink)}
+.ring b{position:relative;z-index:1;font-family:var(--hand);font-size:30px;color:var(--ink)}
+.engine-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--type);font-size:11.5px;color:var(--ink-2);background:var(--paper-2);border:1.5px dashed var(--ink-2);border-radius:3px;padding:2px 10px}
+.engine-tag i{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.bar-row{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;font-size:13px;margin:6px 0}
+.bar-row .bar{height:13px;background:var(--paper-2);border:1.5px solid var(--ink-2);border-radius:2px;overflow:hidden}
+.bar-row .bar i{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--blue) 0 4px,var(--blue-2) 4px 8px)}
+.bar-row .bar i.r{background:var(--red)} .bar-row .bar i.y{background:var(--yellow)} .bar-row .bar i.g{background:var(--green)}
+.dx-head{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
+
+/* 手繪視覺化（3_rules：rough.js） */
+.skbox{position:relative;padding:12px 14px}
+.skbox-bg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.skbox-in{position:relative}
+.skbars{display:grid;gap:5px}
+.skbar-row{display:grid;grid-template-columns:130px 1fr 92px;gap:10px;align-items:center;font-size:13px}
+.skbar-row span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.skbar-row svg{width:100%;height:18px;display:block;overflow:visible}
+.skbar-row b{text-align:right;font-family:var(--type);font-weight:400;font-size:12.5px}
+.skbar-cap{font-size:11.5px;color:var(--red);text-align:right;margin-top:2px}
+.triad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.triad-k{font-family:var(--hand);font-size:14px;color:var(--muted)}
+.triad-v{font-weight:700;font-size:15px;margin-top:2px;word-break:break-word}
+.triad-w{color:var(--red);font-size:12px;font-weight:700;margin-top:4px}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.slot{border:1.5px solid var(--ink-2);border-radius:6px 3px 7px 4px;padding:8px 10px;background:var(--card);display:flex;flex-direction:column;gap:1px;font-size:12.5px}
+.slot b{font-family:var(--type);font-weight:400;font-size:11.5px;color:var(--muted)}
+.slot span{font-weight:700;line-height:1.35}
+.slot em{font-style:normal;font-size:11px;color:var(--muted)}
+.slot.need{background:var(--ink);color:var(--paper-2);border-color:var(--ink)}
+.slot.need b,.slot.need em{color:var(--line)}
+.slot.other{border:2px solid var(--red);background:var(--red-soft)}
+.slot.other em{color:var(--red);font-weight:700}
+.slot.used{background:var(--green-soft);border-color:var(--green)}
+.slot.unused{opacity:.5;border-style:dashed;background:transparent}
+.slot.miss{opacity:1;border:2px dashed var(--red)}
+.slot.miss em{color:var(--red);font-weight:700}
+.acts{display:flex;gap:6px}
+.act{min-width:64px}
+.act .skbox{text-align:center;padding:10px 6px}
+.act b{display:block;font-family:var(--hand);font-size:16px}
+.act span{font-size:12px;color:var(--muted)}
+.filmstrip{display:flex;gap:4px;padding:17px 6px;border-radius:3px;overflow-x:auto;background-color:var(--ink);
+  background-image:linear-gradient(90deg,var(--paper-3) 0 8px,transparent 8px 16px),linear-gradient(90deg,var(--paper-3) 0 8px,transparent 8px 16px);
+  background-size:16px 6px,16px 6px;background-repeat:repeat-x;background-position:4px 5px,4px calc(100% - 5px)}
+.frame{min-width:46px;background:var(--paper-2);border:2px solid transparent;border-radius:2px;padding:6px;font-size:11.5px;display:flex;flex-direction:column;gap:2px}
+.frame b{font-family:var(--type);font-weight:400;font-size:13px}
+.frame span{font-weight:700}
+.frame em{font-style:normal;color:var(--muted);word-break:break-all}
+.frame i{font-style:normal;font-size:10.5px;color:var(--red);background:var(--red-soft);border-radius:2px;padding:0 3px;align-self:flex-start}
+.frame.warn{border-color:var(--yellow);background:var(--yellow-soft)}
+.frame.bad{border-color:var(--red)}
+.checklist{display:grid;gap:6px}
+.ck{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:4px;font-size:13.5px;flex-wrap:wrap}
+.ck svg{width:22px;height:22px;flex:0 0 auto;overflow:visible}
+.ck span{flex:1;min-width:140px}
+.ck em{font-style:normal;font-size:11.5px;color:var(--muted);text-align:right}
+.ck.on{background:var(--green-soft)}
+.ck.warn{background:var(--yellow-soft)}
+.ck.warn em{color:var(--yellow-ink);font-weight:700}
+.ck.off span{color:var(--muted)}
+.ck.off em{color:var(--red)}
+
+/* 帶入、底部操作、浮層 */
+.carry{border:2px dashed var(--blue);background:var(--blue-soft);border-radius:6px;padding:12px 16px;margin-bottom:18px;font-size:13.5px}
+.carry h4{color:var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.carry .chips{display:flex;flex-wrap:wrap;gap:6px}
+.carry .chip{background:var(--card);border:1.5px solid var(--ink-2);border-radius:var(--r-hand);padding:3px 11px;font-size:12.5px;cursor:pointer}
+.carry .chip:hover{border-color:var(--blue);color:var(--blue);box-shadow:2px 2px 0 var(--blue)}
+.carry .chip.static{cursor:default;border-style:dashed}
+.carry .chip.static:hover{border-color:var(--ink-2);color:inherit;box-shadow:none}
+.footer-actions{position:sticky;bottom:0;background:rgba(var(--card-rgb),.95);border-top:2px solid var(--ink);padding:12px 0;margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;z-index:5}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper-2);padding:10px 18px;border-radius:4px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:300;box-shadow:3px 3px 0 var(--yellow);max-width:92vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red);box-shadow:3px 3px 0 var(--ink)}
+.svg-wrap{overflow:auto;border:1.5px solid var(--ink-2);border-radius:4px;background:var(--card);padding:8px}
+.svg-wrap svg{display:block;min-width:600px;width:100%;height:auto}
+.modal-bg{position:fixed;inset:0;background:rgba(var(--ink-rgb),.5);display:none;align-items:center;justify-content:center;z-index:250;padding:16px}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border:2px solid var(--ink);border-radius:var(--r-card);max-width:540px;width:100%;padding:24px;box-shadow:6px 6px 0 var(--ink)}
+.lock-screen{text-align:center;padding:56px 20px}
+.lock-screen .ic{font-size:46px}
+
+/* 報告 */
+.report-cover{background:var(--ink);color:var(--paper-2);border-radius:4px;padding:52px 40px 34px;margin-bottom:24px;position:relative;overflow:hidden}
+.report-cover h1{color:var(--paper-2);font-size:32px}
+.report-cover .sub{opacity:.85}
+.report-section{margin-bottom:28px}
+.report-section h2{display:inline-block;font-size:22px;margin-bottom:14px;padding:0 6px;background:linear-gradient(transparent 58%,var(--yellow-soft) 58%)}
+.report-section h3{font-size:16.5px;margin:14px 0 6px}
+.two-col{columns:2;column-gap:28px}
+#reportDoc{background:transparent}
+
+/* 試算器 */
+.sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.sim-grid3{display:grid;grid-template-columns:1fr 1.05fr 1.35fr;gap:12px}
+.sim-lights{display:flex;gap:12px;flex-wrap:wrap}
+.sim-light{flex:1;min-width:120px;border:1.5px dashed var(--ink-2);border-radius:5px;padding:12px;text-align:center;background:var(--paper-2)}
+.sim-light .light{width:26px;height:26px;margin-bottom:6px}
+.sim-light b{display:block;font-size:13px;color:var(--ink)}
+.sim-light span{font-size:12px;color:var(--muted)}
+.thr-tbl th,.thr-tbl td{white-space:nowrap;padding:5px 6px}
+.thr-tbl input{width:66px!important;min-width:0!important}
+
+/* 開場說明（p5.js，無音效） */
+.intro{position:fixed;inset:0;z-index:200;background:var(--paper);display:none;flex-direction:column}
+.intro.show{display:flex}
+.intro-stage{flex:1;min-height:0;position:relative;overflow:hidden}
+.intro-stage canvas{display:block}
+.intro.no-p5 .intro-stage{display:none}
+.intro.no-p5{justify-content:center}
+.intro-ui{padding:16px 24px 22px;border-top:2px solid var(--ink);background:var(--paper-2)}
+.intro.no-p5 .intro-ui{border:2px solid var(--ink);box-shadow:5px 5px 0 var(--ink);margin:0 16px;border-radius:6px}
+.intro-cap{max-width:860px;margin:0 auto}
+.intro-no{font-family:var(--type);font-size:12.5px;letter-spacing:2px;color:var(--red)}
+.intro-cap h2{font-size:28px;margin:4px 0 6px}
+.intro-cap p{color:var(--ink-2);font-size:15.5px;min-height:3.2em;margin:0}
+.intro-bar{max-width:860px;margin:12px auto 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.intro-dots{display:flex;gap:6px}
+.intro-dots i{width:26px;height:8px;border-radius:2px;border:1.5px solid var(--ink-2);background:transparent;cursor:pointer;overflow:hidden;position:relative}
+.intro-dots i.done{background:var(--ink-2)}
+.intro-dots i.on::after{content:"";position:absolute;inset:0;background:var(--red);transform-origin:left;animation:dot var(--dur,7.5s) linear forwards}
+.intro-dots i.on.hold::after{animation:none}
+@keyframes dot{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+.credit{max-width:1180px;margin:34px auto 0;text-align:right;font-size:12px;color:var(--muted-2)}
+
+/* PDF 擷取模式：固定寬度、隱藏互動元素 */
+body.pdf-mode #reportDoc{width:960px;max-width:none;padding:8px 6px;background:var(--pdf-bg)}
+body.pdf-mode .rough-annotation{display:none!important}
+/* html2canvas 不支援 repeating-linear-gradient：PDF 改用一般漸層平鋪 */
+body.pdf-mode .bar-row .bar i:not(.r):not(.y):not(.g){background:var(--blue)}
+
+@media (prefers-reduced-motion:reduce){
+  .intro-dots i.on::after{animation:none}
+  .btn,.tile{transition:none}
+}
+
+/* ---------- RWD ---------- */
+@media (max-width:1180px){.sim-grid3{grid-template-columns:1fr 1fr}}
+@media (max-width:1080px){
+  .g4{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(2,1fr)} .stage-tiles{grid-template-columns:repeat(2,1fr)}
+  .sim-grid{grid-template-columns:1fr 1fr}
+  .slate-body{grid-template-columns:1fr}
+  .slate-art{max-width:460px}
+}
+@media (max-width:860px){
+  .topbar{padding:0 12px;gap:8px}
+  .topbar .progress{display:none}
+  .topbar .brand .sub{display:none}
+  .topbar .menu-btn{display:inline-flex}
+  .topbar .btn.top-nav{display:none}
+  .topbar .brand{font-size:15.5px}
+  .app{flex-direction:column}
+  .sidebar{position:fixed;left:0;top:var(--topbar-h);width:min(300px,86vw);height:calc(100vh - var(--topbar-h));transform:translateX(-105%);transition:.25s;z-index:60;box-shadow:6px 0 0 var(--ink)}
+  .sidebar.open{transform:none}
+  .main{padding:22px 14px 40px}
+  .g2,.g3,.g4,.stage-tiles,.sim-grid,.sim-grid3,.triad{grid-template-columns:1fr}
+  .profile{grid-template-columns:1fr}
+  .avatar-wrap{max-width:180px}
+  .hero{padding:22px 18px}
+  .hero h1{font-size:24px}
+  .slate-body{padding:20px 16px 22px}
+  .slate h1{font-size:27px}
+  .slate-grid{grid-template-columns:repeat(2,1fr)}
+  .slate-grid div:nth-child(2){border-right:0}
+  .slate-grid div:nth-child(-n+2){border-bottom:1.5px solid rgba(var(--paper-rgb),.5)}
+  .stage-hero{flex-direction:column;gap:10px;padding:20px 16px 16px}
+  .stage-hero h1{font-size:23px}
+  .bar-row{grid-template-columns:110px 1fr 50px}
+  .skbar-row{grid-template-columns:86px 1fr 70px;gap:6px}
+  .dx-head{grid-template-columns:1fr}
+  .two-col{columns:1}
+  .card{padding:16px 14px;box-shadow:3px 3px 0 var(--ink)}
+  .report-cover{padding:40px 20px 24px}
+  .footer-actions .btn{flex:1;justify-content:center}
+  .intro-cap h2{font-size:22px}
+  .intro-cap p{font-size:14px}
+  .intro-ui{padding:12px 14px 16px}
+}
+.sb-overlay{position:fixed;inset:0;top:var(--topbar-h);background:rgba(var(--ink-rgb),.4);display:none;z-index:55}
+.sb-overlay.show{display:block}
+
+/* ---------- 列印（A4 報告） ---------- */
+@media print{
+  @page{size:A4;margin:14mm 13mm}
+  html,body{background:#fff;font-size:11.5pt}
+  .topbar,.sidebar,.footer-actions,.no-print,.toast,.sb-overlay,.modal-bg,.intro,.credit,.rough-annotation{display:none!important}
+  .app{display:block}
+  .main{padding:0}
+  .container{max-width:none}
+  .card,.dx-block,.form-section,.report-cover,.stage-hero{box-shadow:none;break-inside:avoid;page-break-inside:avoid}
+  .report-cover{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:var(--ink)!important;color:#fff!important}
+  .report-section{break-inside:auto}
+  .report-section h2{break-after:avoid}
+  .badge,.light,.kpi,.note,.bar-row .bar i,.sev,.ring,.slot,.frame,.filmstrip,.ck,.report-section h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .tbl{font-size:10pt}
+  .tbl th,.tbl td{padding:4px 6px}
+  .page-break{break-before:page;page-break-before:always}
+  a{text-decoration:none;color:inherit}
+  .svg-wrap{border:0;padding:0}
+  .svg-wrap svg{min-width:0}
+  .two-col{columns:2}
+  .grid.g4{grid-template-columns:repeat(4,1fr)}
+  .grid.g2,.grid.g3{grid-template-columns:repeat(2,1fr)}
+  .kpi .v{font-size:18pt}
+}
+</style>
+<!-- THEME:pack 上市包檢驗（字型、色票、裝飾；換主題：workshop_build.py theme <parts> <主題資料夾>） -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style id="theme-css">
+:root{
+  --paper:#efe6d6; --paper-2:#faf6ee; --paper-3:#e3d5bd; --card:#fffcf6; --field-bg:#fffefb; --pdf-bg:#fffdf8;
+  --ink:#2a2420; --ink-2:#463c33; --muted:#6f6254; --muted-2:#9c8d7b; --line:#d6c7ad; --line-2:#b9a68a;
+  --red:#c0462f; --red-soft:#f6ddd5; --yellow:#dda12a; --yellow-soft:#f9edcc; --yellow-ink:#875f0a;
+  --green:#3f7a52; --green-soft:#dfece0; --blue:#2c5a78; --blue-2:#47789a; --blue-soft:#dde8ef;
+  --ink-rgb:42,36,32; --paper-rgb:250,246,238; --paper3-rgb:227,213,189; --card-rgb:255,252,246; --yellow-rgb:221,161,42;
+  --dark:#241e19; --dark-2:#2f2721; --dark-3:#3c322a; --dark-line:#4d4137; --dark-dash:#6c5d4f;
+  --on-dark:#ecdfc9; --on-dark-2:#e0d2bb; --on-dark-muted:#c2ae91; --on-dark-dim:#a39380; --on-dark-danger:#f2a28f;
+  --hand:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+  --type:"Courier Prime","Courier New",monospace;
+}
+/* 紙面：牛皮紙檢驗單（細點＋淡方格） */
+body{background:radial-gradient(rgba(var(--ink-rgb),.07) .8px,transparent 1.2px) 3px 7px/16px 16px,linear-gradient(rgba(var(--ink-rgb),.045) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(var(--ink-rgb),.045) 1px,transparent 1px) 0 0/32px 32px,var(--paper)}
+/* 頂欄下緣：封箱膠帶 */
+.topbar::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:8px;background:repeating-linear-gradient(90deg,rgba(var(--ink-rgb),.3) 0 2px,transparent 2px 28px),linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 70%),var(--yellow);border-bottom:1.5px solid var(--ink)}
+/* 側欄：倉儲貨架（兩側直柱＋層板刻度） */
+.sidebar{background-image:linear-gradient(90deg,rgba(var(--paper-rgb),.2) 0 2px,transparent 2px),linear-gradient(180deg,rgba(var(--paper-rgb),.22) 0 2px,transparent 2px 40px),linear-gradient(90deg,rgba(var(--paper-rgb),.2) 0 2px,transparent 2px),linear-gradient(180deg,rgba(var(--paper-rgb),.22) 0 2px,transparent 2px 40px);
+  background-size:2px 100%,12px 40px,2px 100%,12px 40px;background-repeat:no-repeat,repeat-y,no-repeat,repeat-y;background-position:left 9px top 0,left 9px top 18px,right 9px top 0,right -1px top 18px;background-attachment:local}
+/* 階段標頭：大字方塊頂上的一段封箱膠帶 */
+.stage-hero .big::before{content:"";position:absolute;left:50%;top:-9px;width:20px;height:22px;margin-left:-10px;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 70%),var(--yellow);border:1.5px solid var(--ink);border-radius:1px}
+/* 首頁主視覺頂條：紙箱上蓋，膠帶從左拉到右封箱 */
+.slate-clap{height:30px;border-bottom:3px solid var(--paper-2);
+  background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0) 70%) 0 9px/100% 12px no-repeat,linear-gradient(var(--yellow),var(--yellow)) 0 9px/100% 12px no-repeat,
+    linear-gradient(90deg,transparent calc(50% - 1px),rgba(var(--ink-rgb),.55) calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px)),var(--paper-3);
+  animation:packTape 1.4s ease-out .2s both}
+@keyframes packTape{from{background-size:0 12px,0 12px,auto}to{background-size:100% 12px,100% 12px,auto}}
+/* 階段磚外框：貨架標籤刻度 */
+.reel{background-image:linear-gradient(90deg,rgba(var(--paper3-rgb),.75) 0 3px,transparent 3px 16px),linear-gradient(90deg,rgba(var(--paper3-rgb),.9) 0 26px,transparent 26px 64px),
+    linear-gradient(90deg,rgba(var(--paper3-rgb),.75) 0 3px,transparent 3px 16px),linear-gradient(90deg,rgba(var(--paper3-rgb),.9) 0 26px,transparent 26px 64px);
+  background-size:16px 5px,64px 3px,16px 5px,64px 3px;background-repeat:repeat-x;background-position:10px 5px,10px 12px,10px calc(100% - 5px),10px calc(100% - 12px)}
+/* 報告封面頂條：封箱膠帶 */
+.report-cover::before{content:"";position:absolute;left:0;right:0;top:0;height:16px;background:repeating-linear-gradient(90deg,rgba(var(--ink-rgb),.3) 0 2px,transparent 2px 30px),var(--yellow);border-bottom:2px solid var(--paper-2)}
+body.pdf-mode .report-cover::before{background:linear-gradient(90deg,rgba(var(--ink-rgb),.3) 0 2px,transparent 2px 30px) 0 0/30px 100% repeat-x,var(--yellow)}
+@media (prefers-reduced-motion:reduce){.slate-clap{animation:none}}
+</style>
+<!-- /THEME -->
+</head>
+<body>
+<header class="topbar">
+  <button class="btn sm menu-btn" id="menuBtn" aria-label="開啟導覽">☰</button>
+  <div class="brand"><div class="logo">檢</div><div id="brandText">上市包檢驗工作台</div></div>
+  <div class="spacer"></div>
+  <div class="progress"><span id="progText">0 / 9 階段</span><div class="bar"><i id="progBar"></i></div></div>
+  <button class="btn sm top-nav" onclick="go('home')">首頁</button>
+  <button class="btn sm top-nav" id="topReport" onclick="go('report')">企劃報告</button>
+  <button class="btn sm top-nav" onclick="confirmReset()">重置</button>
+</header>
+<div class="sb-overlay" id="sbOverlay" onclick="toggleSidebar(false)"></div>
+<div class="app"><aside class="sidebar" id="sidebar"></aside><main class="main"><div class="container" id="view"></div><footer class="credit">製作者：黃政文</footer></main></div>
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-label="填寫說明">
+  <div id="introStage" class="intro-stage"></div>
+  <div class="intro-ui">
+    <div class="intro-cap"><div class="intro-no" id="introNo"></div><h2 id="introT"></h2><p id="introS"></p></div>
+    <div class="intro-bar"><div class="intro-dots" id="introDots"></div>
+      <div class="btn-row"><button class="btn ghost" id="introPrev">上一段</button><button class="btn primary" id="introNext">下一段</button><button class="btn" id="introSkip">略過說明</button></div>
+    </div>
+  </div>
+</div>
+<script>
+/* ===== THEME：pack 上市包檢驗（標籤、開場主題場景、首頁預設插圖）｜換主題：workshop_build.py theme <parts> <主題資料夾> ===== */
+const THEME={id:'pack',name:'上市包檢驗',
+  labels:{home:'📦 首頁｜上市包總覽',slate:['PACK','PARTS','PASSED','TIME'],tile:'BOX',pain:'退',
+    reelNote:'黃框是目前的箱格；前一格合格蓋章後，下一格才會開箱。畫面窄時可左右滑動。',introCorner:'BOX {n}  ·  QC'},
+  glyphs:'零件裝箱檢驗合格封前一格下才開',
+  /* 開場主題場景：設計座標 800×380；K 提供手繪工具（wl 線、wr 框、wc 圓、hatch 斜線、check 勾、txt 字）、時間函式（seg、ease、clamp）、色票 K.C、字型 K.F */
+  intro:{scenes:{
+    /* 裝箱：零件卡依序落進紙箱（件數＝strip 標籤數，1～5，沒給標籤時 3 件），箱蓋闔上、膠帶封箱，箱面寫 UI.slate.prod，最後蓋「檢驗合格」章 */
+    title(t,q,K){const{p,wl,wr,hatch,check,txt,seg,ease}=K,{INK,RED,YEL,GRN,GRAY,CARD,LINE}=K.C,TYPE=K.F.type,HAND=K.F.hand;
+      const SL=((INTRO.find(x=>x.k==='strip')||{}).p||{}).labels||[],n=Math.max(1,Math.min(5,SL.length||3)),
+        BX=260,BW=280,BT=190,BB=318,cw=n>3?92:110,gap=12,row=n*cw+(n-1)*gap,rx=400-row/2,mv=2.6/n;
+      p.push();p.stroke(GRAY);p.strokeWeight(1.6);wl(30,322,770,322,10,seg(t,0,.6));p.pop();hatch(30,324,740,8,LINE,11);
+      let got=0;
+      for(let i=0;i<n;i++){const a=.5+i*mv,k=ease(seg(t,a,a+.55));if(k>=1){got++;continue;}if(t<.15+i*.08)continue;
+        const cx=p.lerp(rx+i*(cw+gap),400-cw/2+(i-(n-1)/2)*14,k),cy=p.lerp(36,236,k);
+        p.push();p.stroke(INK);p.strokeWeight(2.2);wr(cx,cy,cw,40,40+i,seg(t,.15+i*.08,.5+i*.08),CARD);p.pop();
+        txt(SL[i]||('PART '+String(i+1).padStart(2,'0')),cx+cw/2,cy+27,SL[i]?18:13,INK,p.CENTER,SL[i]?HAND:TYPE);}
+      p.push();p.stroke(INK);p.strokeWeight(2.6);wr(BX,BT,BW,BB-BT,60,seg(t,0,.7),CARD);p.pop();
+      if(t>.7){txt('BOX 01',BX+12,BT+22,12,RED,p.LEFT,TYPE);txt('PARTS '+got+'/'+n,BX+BW-12,BT+22,12,GRAY,p.RIGHT,TYPE);
+        p.push();p.stroke(GRAY);p.strokeWeight(1.6);[0,1].forEach(j=>{const ax=BX+18+j*14;wl(ax,BB-10,ax,BB-34,70+j,1);wl(ax-5,BB-28,ax,BB-34,72+j,1);wl(ax+5,BB-28,ax,BB-34,74+j,1);});p.pop();}
+      const ck=ease(seg(t,3.4,4)),L=BW/2,fl=[[BX,BT,p.lerp(-2.36,0,ck)],[BX+BW,BT,p.lerp(-.79,-3.14,ck)]];
+      fl.forEach((f,j)=>{p.push();p.translate(f[0],f[1]);p.rotate(f[2]);p.stroke(INK);p.strokeWeight(2.2);wr(0,-5,L,10,80+j,seg(t,.2,.7),CARD);p.pop();});
+      if(t>4){const k=ease(seg(t,4,4.6)),k2=ease(seg(t,4.5,4.8));p.push();p.noStroke();p.fill(YEL);p.rect(BX-10,BT-7,(BW+20)*k,14);p.rect(392,BT+7,16,30*k2);p.pop();
+        p.push();p.stroke(INK);p.strokeWeight(1.4);wl(BX-10,BT-7,BX-10+(BW+20)*k,BT-7,90,1);wl(BX-10,BT+7,BX-10+(BW+20)*k,BT+7,91,1);p.pop();}
+      if(t>4.4){const pr=String(UI.slate.prod||'');p.push();p.textFont(HAND);p.textSize(28);const pw=p.textWidth(pr);let L2=[pr];
+        if(pw>180&&pr.length>1){let best=1,bd=1e9;for(let i=1;i<pr.length;i++){const d=Math.abs(p.textWidth(pr.slice(0,i))-pw/2)-(pr[i]===' '?8:0);if(d<bd){bd=d;best=i;}}L2=[pr.slice(0,best).trim(),pr.slice(best).trim()];}
+        const mw=Math.max(1,...L2.map(s=>p.textWidth(s)));p.pop();const fs=Math.min(28,28*180/mw),y0=250-(L2.length-1)*(fs+8)/2;
+        p.push();p.stroke(YEL);p.strokeWeight(7);wl(310,y0+(L2.length-1)*(fs+8)+10,490,y0+(L2.length-1)*(fs+8)+10,100,seg(t,4.5,5));p.pop();
+        L2.forEach((s,i)=>txt(s,400,y0+i*(fs+8)+fs*.35,fs,INK,p.CENTER));}
+      if(t>4.9){const sk=ease(seg(t,4.9,5.3)),sc=1.5-.5*sk;p.push();p.translate(484,292);p.rotate(-.16);p.scale(sc);p.stroke(GRN);p.strokeWeight(2.6);wr(-54,-21,108,42,110,sk);wr(-49,-16,98,32,111,sk);p.pop();
+        if(sk>.5){p.push();p.translate(484,292);p.rotate(-.16);p.scale(sc);txt('檢驗合格',0,8,21,GRN,p.CENTER);p.pop();}
+        check(552,252,24,GRN,seg(t,5.3,5.8),120);}
+      txt(String(UI.slate.tagline||''),400,362,18,GRAY,p.CENTER);},
+    /* 貨架上一排箱格：已確認的封膠帶、蓋綠色「合格」章，目前格黃框、箱蓋掀開，其餘上鎖；格數多時整排往左捲動 */
+    strip(t,q,K){const{p,wl,wr,wc,txt,seg,ease}=K,{INK,RED,YEL,GRN,GRAY,CARD}=K.C,TYPE=K.F.type;
+      const L=q.labels||STAGES.map(s=>s.title.slice(0,2)),n=L.length,stp=Math.min(.62,5.6/n),sw=130,gap=20,total=n*sw+(n-1)*gap,SY=232,
+        x0=total>700?50-ease(seg(t,.4,6.4))*(total-700):(800-total)/2;
+      p.push();p.stroke(INK);p.strokeWeight(2.6);wl(20,SY,780,SY,5,seg(t,0,.6));p.pop();
+      for(let i=0;i<9;i++){if(t<.1+i*.05)continue;const x=40+i*90;p.push();p.stroke(GRAY);p.strokeWeight(1.6);wl(x,SY,x+14,SY+22,20+i,1);p.pop();}
+      for(let i=0;i<n;i++){const x=x0+i*(sw+gap);if(x>800||x+sw<0)continue;const done=t>.9+i*stp,cur=!done&&t>.9+(i-1)*stp;
+        p.push();p.stroke(cur?YEL:INK);p.strokeWeight(cur?4:2.4);wr(x,112,sw,SY-112,400+i,1,CARD);p.pop();
+        if(cur){p.push();p.stroke(YEL);p.strokeWeight(3);wl(x+4,112,x-10,94,450+i,1);wl(x+sw-4,112,x+sw+10,94,460+i,1);p.pop();}
+        txt('BOX '+String(i+1).padStart(2,'0'),x+10,134,12,RED,p.LEFT,TYPE);
+        txt(L[i],x+sw/2,196,22,done||cur?INK:GRAY,p.CENTER);
+        if(done){const k=ease(seg(t,.9+i*stp,1.2+i*stp));p.push();p.noStroke();p.fill(YEL);p.rect(x+sw/2-9,112,18,26*k);p.pop();
+          p.push();p.translate(x+sw-30,152);p.rotate(-.2);p.scale(.6+.4*k);p.stroke(GRN);p.strokeWeight(2.4);wc(0,0,19,19,500+i,k);p.pop();
+          if(k>.5){p.push();p.translate(x+sw-30,152);p.rotate(-.2);txt('合格',0,5,13,GRN,p.CENTER);p.pop();}}
+        else if(!cur){p.push();p.stroke(GRAY);p.strokeWeight(2);wr(x+sw-30,146,18,14,600+i,1);wc(x+sw-21,146,6,7,610+i,.5);p.pop();}}
+      txt('前一格合格，下一格才開箱',400,320,18,GRAY,p.CENTER);}}},
+  /* 首頁預設插圖（內容未提供 HERO_IMG 或 homeSketch 時使用）：封好膠帶、蓋了合格章的紙箱＋檢驗清單；null 表示不放 */
+  hero(){if(typeof skRect!=='function')return'';
+    const ink=tok('--ink','#2a2420'),g=tok('--green','#3f7a52'),r=tok('--red','#c0462f'),y=tok('--yellow','#dda12a'),m=tok('--muted','#6f6254'),c=tok('--card','#fffcf6'),k3=tok('--paper-3','#e3d5bd'),
+      f=String(tok('--hand','sans-serif')).replace(/"/g,"'"),ty=String(tok('--type','monospace')).replace(/"/g,"'");
+    let s=`<svg viewBox="0 0 360 236" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="手繪草圖：一個貼了封箱膠帶、蓋了合格章的紙箱，旁邊是檢驗清單：原始列數減重複等於合併、10 題對 8 題已打勾，歌曲 30 至 60 秒還沒打勾" font-family="${f}">`;
+    s+=`<path d="M22 86 L42 62 L158 62 L138 86 Z" fill="${k3}" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    s+=`<path d="M138 86 L158 62 L158 182 L138 206 Z" fill="${k3}" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    s+=`<rect x="22" y="86" width="116" height="120" fill="${c}" stroke="${ink}" stroke-width="2.4"/>`;
+    s+=skLine(57,62,37,86,{stroke:m,seed:2,strokeWidth:1,roughness:.8})+skLine(143,62,123,86,{stroke:m,seed:3,strokeWidth:1,roughness:.8});
+    s+=`<path d="M72 86 L92 62 L108 62 L88 86 Z" fill="${y}" stroke="${ink}" stroke-width="1.4"/><rect x="72" y="86" width="16" height="28" fill="${y}" stroke="${ink}" stroke-width="1.4"/>`;
+    s+=`<text x="30" y="104" font-size="10" fill="${r}" font-family="${ty}">BOX 01</text>`;
+    s+=skLine(30,124,64,124,{stroke:m,strokeWidth:2.4,seed:4,roughness:.8})+skLine(30,134,56,134,{stroke:m,strokeWidth:2.4,seed:5,roughness:.8});
+    s+=`<g transform="rotate(-12 82 168)">`+skRect(48,151,68,34,{stroke:g,strokeWidth:2.2,seed:6,roughness:1})+`<text x="82" y="175" font-size="17" fill="${g}" text-anchor="middle" font-weight="700">合格</text></g>`;
+    [['原始減重複＝合併',62,1],['10 題對 8 題',112,1],['30 至 60 秒',162,0]].forEach((st,i)=>{const yy=st[1];
+      s+=skRect(178,yy-19,24,24,{stroke:ink,seed:60+i,roughness:1.2});
+      if(st[2])s+=skLine(183,yy-7,189,yy,{stroke:g,strokeWidth:2.6,seed:70+i,roughness:.6})+skLine(189,yy,201,yy-18,{stroke:g,strokeWidth:2.6,seed:75+i,roughness:.6});
+      s+=`<text x="212" y="${yy}" font-size="17" fill="${ink}">${st[0]}</text>`;
+      if(i<2)s+=skLine(190,yy+10,190,yy+26,{stroke:m,seed:80+i,strokeWidth:1.4,roughness:1.4});});
+    s+=`<text x="178" y="212" font-size="13" fill="${m}">每一項都打勾，才算封箱</text>`;
+    return s+'</svg>';}};
+/* ===== /THEME ===== */
+/* =====================================================================
+   PART A：主題內容（D14 上市包檢驗工作台：13 個零件逐項對及格標準）
+   Order: APP -> CASE -> AVATAR_SVG -> constants -> STAGES
+   PART A must not call PART B consts (num, esc, cut, stage...) at load time;
+   only inside functions (carry, calc, validate) that run later.
+   及格標準來源：課程 SPEC 第 11 節（全班唯一版本）；範例數字只引用示範資料說明.md。
+   ===================================================================== */
+
+const APP={
+  storageKey:'hc116-launchpack-v1',
+  platform:'上市包檢驗工作台',
+  topic:'AI 產品上市包 13 個零件檢驗與 3 分鐘發表準備',
+  brandSub:'企劃 → 數據 → 視覺 → 工作流 → 發表｜五階段',
+  flowName:'五階段上市包檢驗',
+  eyebrow:'LAUNCH PACK · QC DESK',
+  exportPrefix:'launchpack_progress',
+  exampleFill:true, // false = hide the 載入範例 buttons; examples stay as grey hints only
+  version:'1.0.0'
+};
+
+/* Mail relay (Google Apps Script web app). Empty endpoint = sending not configured yet.
+   toLabel = who receives the report (button text: 寄給{toLabel}). */
+const MAIL={endpoint:'',toLabel:'老師'};
+
+/* Optional hero illustration (data URI). Empty = no image. */
+const HERO_IMG='';
+
+/* Fixed wording the engine reads: report name, slate, home cards, usage list. */
+const UI={
+  reportName:'上市包檢驗報告',
+  pdfPrefix:'上市包檢驗報告',
+  slate:{prod:'我的上市包',roll:'約 3 小時',tagline:'每個零件都要能驗'},
+  caseBadge:'虛構範例',
+  pains:{title:'上市包常見退件原因',badge:'QC REJECT',note:'檢驗前先對照這六個退件原因，發表前就補好。'},
+  outcomes:{title:'檢驗完你會拿到',badge:'PACK LIST',visionTitle:'五階段做完的六件事'},
+  usage:[
+    '每個階段先看「方法說明」「操作指引」「參考範例」三張說明卡，再到「填寫資料」對照你自己的檔案填寫。',
+    '欄位下方的灰字是參考範例提示；「載入範例」可整份帶入對照，確認前請換成你自己數出來的數字。',
+    '數字欄請打開檔案實際數，不要估；按「確認診斷」後，系統依上市包及格標準逐條重算，並解鎖下一階段。',
+    '前面確認過的資料會出現在「前階段帶入」區塊，點一下就能帶進來，不用重打。',
+    '五階段完成後，到「上市包檢驗報告」看 13 個零件完成數與是否達 80%，下載 PDF，再按「寄給老師」送出。',
+    '資料只存在這台電腦的瀏覽器裡；換電腦或清除瀏覽紀錄前，先按側欄「匯出進度」備份。'
+  ],
+  sendNote:'第 1 階段的姓名會當作信件主旨；Email 選填，有填老師才方便回信。'
+};
+
+/* First-visit intro (p5.js, no audio). k = scene id in the engine; p = scene params (see references/intro-p5.md). */
+const INTRO=[
+  {k:'title',t:'歡迎來到上市包檢驗工作台',s:'接下來 3 小時，你會把第 1 至 13 堂做出的零件，一個一個對到及格標準，算出完成數。'},
+  {k:'strip',t:'五個階段，一箱一箱檢驗',s:'企劃與知識 → 數據與文案 → 視覺影音 → 工作流 → 發表準備。前一箱確認後，下一箱才會解鎖。',p:{labels:['企劃','數據','視覺','流程','發表']}},
+  {k:'cards',t:'每箱先看三張說明卡',s:'方法說明講及格標準，操作指引講去哪裡數，參考範例讓你看別人這樣填會被抓出什麼問題。'},
+  {k:'write',t:'數字自己數，不照抄',s:'欄位下方的灰字是範例提示，只能參考。列數、杯數、字數、秒數，都要打開你自己的檔案重數一次。',p:{label:'合併後列數',mine:'我的合併表：1011 列',example:'範例：原始 1014 列、重複 3 列（只能參考）',moral:'AI 讀字，程式重算'}},
+  {k:'check',t:'按「確認診斷」，逐條檢查',s:'每個零件都有數得出來的及格標準，每條結論附規則編號，告訴你哪個零件還沒過、差在哪裡。',p:{rows:[['杯數總計 28,689 杯','ok'],['欄名統一：品項、杯數','ok'],['1014 減 3 不等於 1014','bad'],['貼文附 3 個 hashtag','ok']],badNote:'R2-01：1014 減 3 應為 1011 列',score:90}},
+  {k:'send',t:'最後：下載 PDF、寄給老師',s:'五階段完成後，報告頁列出 13 個零件完成數與是否達 80%，可下載《上市包檢驗報告》並寄給老師，第 15 堂發表就用它。',p:{doc:'上市包檢驗報告'}}
+];
+
+/* ---------------- Example person (fictional) ---------------- */
+const CASE={
+  name:'示範學員',
+  title:'晴丘咖啡行銷專員（虛構範例）',
+  system:'晴丘咖啡｜竹北、東門、園區三家門市（虛構示範品牌）',
+  heroLead:'這個工作台陪你把第 1 至 13 堂做出的 13 個零件，逐一對照上市包及格標準：數字由你打開檔案自己數，系統依規則重算，告訴你哪個零件已完成、哪個還差什麼。最後產出《上市包檢驗報告》，列出 13 個零件完成數與是否達 80%，可下載 PDF 並寄給老師，第 15 堂發表就用它。（參考範例為虛構人物與虛構品牌）',
+  intro:'<p>示範學員是晴丘咖啡（虛構）的行銷專員。夏季冷萃咖啡 2027-04-01 起在竹北店、東門店、園區店試賣，擴大上市啟動會議決定：先看三門市銷售數據，再做文案、海報、商品圖、歌曲、旁白與短影音。</p><p>到了第 14 堂，13 個零件大多做過，但他還沒一個一個對過及格標準：合併表的列數、知識庫答對幾題、歌曲有幾秒，都憑印象填。</p>',
+  flow:['企劃與知識','數據與文案','視覺影音','工作流','發表準備'],
+  meta:[
+    ['角色','晴丘咖啡行銷專員，一個人負責上市包大部分的零件'],
+    ['核心問題','「13 個零件都做過了，哪些真的及格？發表前還要補什麼？」'],
+    ['期待結果','一份上市包檢驗報告：13 個零件完成數、是否達 80%，加上補件計畫']
+  ],
+  pains:[
+    ['數字憑印象','列數、杯數、答對題數沒有打開檔案重數，報告裡的數字對不上。'],
+    ['做過不等於及格','零件有檔案，但字數、秒數、張數沒對過及格標準。'],
+    ['沒測查無資料','知識庫只問資料裡有的題目，沒測 AI 會不會老實說找不到。'],
+    ['授權沒記錄','歌曲用哪個方案、能不能對外播放，沒有寫下來。'],
+    ['AI 擬稿直接發','文案沒做誇大與法規用語檢查，就準備對外貼文。'],
+    ['自評太樂觀','沒過的零件也勾成完成，補件計畫漏掉了。']
+  ],
+  vision:'把 13 個零件一個一個對到及格標準，數字自己數、程式重算，再用檢驗結果排補件與發表。',
+  visionItems:[
+    ['企劃與知識','題目卡、會議紀錄、一頁企劃、知識庫逐項對標準'],
+    ['數據與文案','合併列數與總計對得上核對表，文案誇大用語 0 處'],
+    ['視覺影音','尺寸、張數、秒數、字數與授權都數得出來'],
+    ['工作流','每步寫工具、輸入、提示詞、輸出、人工查核點'],
+    ['發表準備','3 分鐘四段大綱，講稿 900 字內'],
+    ['上市包檢驗報告','13 個零件完成數、是否達 80%、補件計畫']
+  ],
+  logic:'AI 讀字，程式重算；AI 擬稿，真人定稿。',
+  outcomes:[['13 個','零件逐項檢驗'],['11 個','及格門檻（80%）'],['4 部分','都要有內容'],['180 秒','發表大綱'],['900 字','講稿上限'],['1 份','PDF 檢驗報告']],
+  outcomeNote:'以上為上市包及格標準與發表規格；你的完成數由系統依你填的數字重算。'
+};
+
+const AVATAR_SVG=`<svg viewBox="0 0 368 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="示範學員頭像：短髮、戴眼鏡、掛識別證、拿著冷萃咖啡杯的行銷專員（虛構範例角色）">
+<rect width="368" height="430" fill="#efe6d6"/><circle cx="184" cy="200" r="150" fill="#e3d5bd"/>
+<path d="M64 430 C70 330 120 302 184 302 C248 302 298 330 304 430 Z" fill="#2c5a78"/>
+<rect x="164" y="250" width="40" height="58" rx="12" fill="#efc4a2"/>
+<path d="M150 304 L184 346 L218 304 L206 298 L184 324 L162 298 Z" fill="#fffcf6"/>
+<path d="M162 322 L176 396 M206 322 L192 396" stroke="#dda12a" stroke-width="5" stroke-linecap="round"/>
+<rect x="164" y="392" width="40" height="30" rx="4" fill="#fffcf6" stroke="#2a2420" stroke-width="2"/><rect x="171" y="400" width="26" height="4" fill="#2c5a78"/><rect x="171" y="409" width="18" height="4" fill="#9c8d7b"/>
+<path d="M114 196 C106 118 150 88 186 88 C228 88 264 118 256 196 C246 156 222 136 184 136 C148 136 124 156 114 196 Z" fill="#2a2420"/>
+<ellipse cx="184" cy="198" rx="62" ry="72" fill="#f6d2b4"/>
+<path d="M120 172 C122 120 160 100 190 102 C230 104 252 132 250 172 C232 148 200 138 176 142 C150 146 132 158 120 172 Z" fill="#2a2420"/>
+<circle cx="160" cy="202" r="17" fill="#fffcf6" fill-opacity=".35" stroke="#463c33" stroke-width="3"/><circle cx="208" cy="202" r="17" fill="#fffcf6" fill-opacity=".35" stroke="#463c33" stroke-width="3"/><path d="M177 201 L191 201" stroke="#463c33" stroke-width="3"/>
+<ellipse cx="160" cy="203" rx="5" ry="6" fill="#2a2420"/><ellipse cx="208" cy="203" rx="5" ry="6" fill="#2a2420"/>
+<circle cx="140" cy="230" r="9" fill="#f2a98f" opacity=".5"/><circle cx="228" cy="230" r="9" fill="#f2a98f" opacity=".5"/>
+<path d="M170 240 Q184 252 198 240" stroke="#b45a4a" stroke-width="4" fill="none" stroke-linecap="round"/>
+<g transform="translate(248 286)">
+<path d="M30 -8 L40 -46" stroke="#dda12a" stroke-width="6" stroke-linecap="round"/>
+<path d="M0 0 L50 0 L43 86 L7 86 Z" fill="#fffcf6" stroke="#2a2420" stroke-width="2.5"/>
+<path d="M3 24 L47 24 L43 82 L7 82 Z" fill="#6b3f22"/>
+<rect x="5" y="40" width="40" height="18" fill="#dda12a"/><path d="M14 49 L36 49" stroke="#2a2420" stroke-width="2"/>
+<rect x="-5" y="-11" width="60" height="13" rx="4" fill="#fffcf6" stroke="#2a2420" stroke-width="2.5"/>
+<ellipse cx="25" cy="72" rx="30" ry="14" fill="#efc4a2" stroke="#d9a888" stroke-width="2"/>
+</g>
+</svg>`;
+
+/* ---------------- Shared option lists ---------------- */
+/* 13 個零件名稱（與上市包組裝進度表一致）；第 5 階段自評與報告共用 */
+const PART_NAMES=['題目卡與提示詞四要素範本','專題啟動會議紀錄','一頁企劃與上市甘特圖或流程圖','產品知識庫','多門市合併總表','一頁分析報告與 2 張圖表','上市文案組','行銷海報','商品圖 3 張','場景歌曲','本人聲音旁白','產品短影音','個人 AI 工作流說明書'];
+const PART_OPTS=PART_NAMES.map((n,i)=>`零件 ${i+1}：${n}`);
+const SIEVES=['熟悉','有素材','可公開'];
+const PREP=['欄名已統一（品項、杯數）','日期欄已轉成日期格式','已移除重複列','異常值已標記並回頭確認'];
+const POSTER_MODES=['兩種尺寸完成稿','救援版：設計單加 1 張 AI 草圖','還沒做'];
+const POSTER_SIZES=['A4 直式','1080×1080'];
+const IMG_TYPES=['白底主圖','情境圖','細節圖'];
+const IMG_MATCH=['顏色','形狀','容量','配件','標示'];
+const SONG_PLANS=['Suno 免費方案（不可商用）','Suno 付費方案','其他有授權的音樂'];
+const SONG_PUBLIC=['會對外發布（廣告、社群、門市播放）','只在內部或課堂使用'];
+const VOICE_AUTH=['只用自己的聲音，不複製別人','已讀過 VoAI 方案條款（能否商用、聲音資料保存）','旁白內容不冒充他人身分','成品標示「AI 合成語音」','已和家人約定通關密語（防詐騙）'];
+const VIDEO_RATIOS=['9:16 直式','16:9 橫式','1:1 方形'];
+const VIDEO_CHECKS=['前 3 秒有鉤子','有字幕','片尾有行動呼籲'];
+const VIDEO_PARTS=['文案（零件 7）','分析圖表（零件 6）','海報（零件 8）','商品圖（零件 9）','場景歌曲（零件 10）','本人旁白（零件 11）'];
+const VIDEO_PRE=['長度 30 至 60 秒，比例 9:16','第 1 鏡是鉤子，最後一鏡是行動呼籲','字幕錯字 0 處','價格、日期和事實卡一致，誇大用語 0 處','至少用到 3 個零件','音樂授權已記錄，AI 生成的部分有標示'];
+const FLOW_TOOLS=['ChatGPT','Gemini','Gemini 筆記本','Excel Power Query','Excel 樞紐分析','Canva','Suno','VoAI','Google Vids','mermaid.live','人工'];
+const OUTLINE_PARTS=['題目：幫誰、解決什麼問題','做了哪些零件','怎麼驗收','限制與下一步'];
+/* Narration length: count characters, ignore whitespace and punctuation */
+const charsOf=s=>String(s||'').replace(/[\s，。、！？：；「」『』（）《》〈〉…～,.!?:;'"()~]/g,'').length;
+/* 負數檢查（validate 用）：map={欄位id:'中文名稱'} */
+const negMsgs=(d,map)=>Object.entries(map).filter(([k])=>String(d[k]??'').trim()!==''&&num(d[k])<0).map(([,l])=>`${l}不可為負數。`);
+
+/* =====================================================================
+   Five stages
+   Field types: text | number | textarea | select(options) | checks(options,min) | table(cols,min)
+   Table col: {k,l,t:'text'|'textarea'|'select'|'number'|'calc',o?,w?,calc?}
+   Common: req, ph, help, dep (+depVal default '是', depReq = required while shown)
+   只有姓名、產品名稱、發表題目必填；數字與勾選欄空白就判「未過」，不擋確認。
+   ===================================================================== */
+const STAGES=[
+/* ---------------------------------------------------------------- 1 */
+{
+  id:1,key:'plan',title:'企劃與知識',en:'Plan & Knowledge',
+  goal:'檢驗零件 1 至 4：題目卡與四要素、會議紀錄、一頁企劃、產品知識庫，每項都對到數得出來的及格標準。',
+  method:{
+    intro:'上市包第一部分是「企劃與知識」。這四個零件決定後面所有成品的方向，也是最容易「有做但沒對標準」的地方。這一階段不用重做，只要打開你的檔案，把數字數出來填進來，系統會依及格標準逐條重算。',
+    points:[
+      ['零件 1 題目卡','三個篩子（熟悉、有素材、可公開）全勾；手上素材至少 3 項；提示詞四要素（角色、任務、背景、格式）4 欄都填，背景至少 2 句。'],
+      ['零件 2 會議紀錄','決議至少 3 條；待辦至少 5 條且每條有負責人與期限；和逐字稿對照查核至少 5 處；會後追蹤信 300 字內。'],
+      ['零件 3 一頁企劃','指標至少 2 個且可量化（目標有數字）；甘特圖或流程圖至少 6 項任務；風險至少 3 條且各有對策。'],
+      ['零件 4 知識庫','來源至少 5 份且各標版本日期；10 題驗收答對 8 題以上且附出處；至少 2 題是資料裡沒有的，AI 要回答查無資料。']
+    ],
+    tools:[['提示詞四要素','角色、任務、背景、格式'],['AI 是手腳不是大腦','題目與判斷由你決定，AI 只幫你寫'],['找不到就說找不到','知識庫驗收一定要測資料裡沒有的題目']],
+    deliverable:'零件 1 至 4 的檢驗結果：每條及格標準通過或未過，以及要補的地方。'
+  },
+  guide:[
+    '填姓名（必填）與 Email（選填）：寄出報告時，老師靠姓名知道是誰交的。',
+    '零件 1：打開題目卡，勾三個篩子，素材一行寫一項，四要素照你的提示詞範本貼上。',
+    '零件 2：打開會議紀錄，決議一行一條；待辦逐條填負責人與期限；追蹤信整封貼上，系統會數字數。',
+    '零件 3：打開一頁企劃，填指標與目標值、甘特圖的任務數、風險與對策。',
+    '零件 4：打開 Gemini 筆記本，抄來源名稱與版本日期，再數 10 題驗收問答的結果。',
+    '按「確認診斷」：系統逐條對照及格標準，未過的條目會附上要補什麼。'
+  ],
+  demo:'參考範例是虛構人物「示範學員」（晴丘咖啡行銷專員）。他的知識庫 10 題只答對 7 題，看診斷怎麼指出零件 4 還差 1 題才及格。',
+  sections:[
+    {title:'你的基本資料',fields:[
+      {id:'name',type:'text',label:'你的姓名',req:true,ph:'寄出報告時當作信件主旨'},
+      {id:'email',type:'text',label:'你的 Email（選填）',ph:'name@gmail.com',help:'有填才方便老師回信。資料平常只存在你的瀏覽器。'}
+    ]},
+    {title:'零件 1：題目卡與提示詞四要素範本',fields:[
+      {id:'product',type:'text',label:'上市包的產品、服務或專案名稱',req:true,ph:'例：自己部門要推的新服務；不能公開就用示範案例'},
+      {id:'who',type:'textarea',label:'對象與要解決的問題',ph:'例：平日早上趕通勤、想外帶一杯不甜咖啡的上班族'},
+      {id:'sieves',type:'checks',label:'選題三個篩子（符合的才勾）',options:SIEVES,help:'熟悉：你每天在做或很了解；有素材：手上有資料可以用；可公開：內容可以在課堂展示。'},
+      {id:'materials',type:'textarea',label:'手上素材（一行一項）',ph:'例：三門市銷售檔\n上市會議逐字稿\n產品規格'},
+      {id:'p4role',type:'text',label:'四要素：角色',ph:'例：晴丘咖啡的行銷專員'},
+      {id:'p4task',type:'textarea',label:'四要素：任務'},
+      {id:'p4bg',type:'textarea',label:'四要素：背景（至少 2 句）',help:'系統以句號、驚嘆號、問號切句。'},
+      {id:'p4format',type:'textarea',label:'四要素：格式'}
+    ]},
+    {title:'零件 2：專題啟動會議紀錄',fields:[
+      {id:'decisions',type:'textarea',label:'會議決議（一行一條）'},
+      {id:'todos',type:'table',label:'待辦事項',min:5,help:'每條都要有負責人與期限；負責人用職稱，不寫真人姓名。',cols:[
+        {k:'item',l:'待辦',t:'textarea',w:'50%'},{k:'owner',l:'負責人',t:'text',w:'25%'},{k:'due',l:'期限',t:'text',w:'25%'}]},
+      {id:'verifyCount',type:'number',label:'和逐字稿對照查核了幾處（有記錄的才算）',ph:'5'},
+      {id:'followMail',type:'textarea',label:'會後追蹤信全文（整封貼上）',help:'系統只數字數（不含空白與標點），及格標準是 300 字內。'}
+    ]},
+    {title:'零件 3：一頁企劃與上市甘特圖或流程圖',fields:[
+      {id:'kpis',type:'table',label:'成功指標',min:2,help:'目標值要有數字，才算可量化。',cols:[
+        {k:'kpi',l:'指標',t:'text',w:'45%'},{k:'target',l:'目標值（含數字）',t:'text',w:'55%'}]},
+      {id:'ganttTasks',type:'number',label:'甘特圖（或流程圖）上有幾項任務',ph:'6'},
+      {id:'risks',type:'table',label:'風險與對策',min:3,cols:[
+        {k:'risk',l:'風險',t:'textarea',w:'50%'},{k:'fix',l:'對策',t:'textarea',w:'50%'}]}
+    ]},
+    {title:'零件 4：產品知識庫',fields:[
+      {id:'sources',type:'table',label:'知識庫來源清單',min:5,help:'每份來源都要標版本日期。',cols:[
+        {k:'name',l:'來源名稱',t:'text',w:'60%'},{k:'date',l:'版本日期',t:'text',w:'40%'}]},
+      {id:'kbCorrect',type:'number',label:'10 題驗收問答，答對幾題',ph:'8'},
+      {id:'kbCited',type:'number',label:'答對的題目裡，有附出處的幾題',ph:'8'},
+      {id:'kbOutside',type:'number',label:'10 題裡，資料裡沒有的題目幾題',ph:'2'},
+      {id:'kbNoData',type:'number',label:'其中 AI 回答「查無資料」的幾題',ph:'2'}
+    ]}
+  ],
+  example:{
+    name:'示範學員',email:'',
+    product:'晴丘咖啡夏季冷萃咖啡（虛構示範）',
+    who:'通勤上班族與園區工程師，平日早上想外帶一杯不甜、不用等的咖啡。',
+    sieves:['熟悉','有素材','可公開'],
+    materials:'三門市 3 至 5 月銷售檔（9 個 Excel）\n上市會議逐字稿\n產品規格、常見問題 FAQ、門市製作 SOP\n夏季活動辦法、過敏原與保存說明',
+    p4role:'晴丘咖啡的行銷專員',
+    p4task:'幫夏季冷萃咖啡擴大上市，寫一則社群貼文初稿。',
+    p4bg:'夏季冷萃咖啡 2027-04-01 起在三家門市試賣，單價 120 元。目標客群是通勤上班族與園區工程師。數字只照抄我提供的資料，找不到就說找不到。',
+    p4format:'150 字內，附 3 個 hashtag，最後一行寫行動呼籲。',
+    decisions:'擴大上市前，先看三門市 3 至 5 月銷售數據\n文案、海報、商品圖、歌曲、旁白與短影音一起做成上市包\n對外使用的數字，一律由行銷專員回查原始檔',
+    todos:[
+      {item:'合併三門市銷售檔並核對列數',owner:'行銷專員',due:'下週一'},
+      {item:'整理一頁分析報告與 2 張圖表',owner:'行銷專員',due:'下週三'},
+      {item:'確認冷萃產品規格與過敏原說明',owner:'產品經理',due:'下週二'},
+      {item:'提供三家門市的店內照片',owner:'門市店長',due:'本週五'},
+      {item:'審核上市文案與海報',owner:'行銷主管',due:'下週五'}
+    ],
+    verifyCount:5,
+    followMail:'各位好：\n今天擴大上市啟動會議的決議與待辦整理如下。\n決議：先看三門市 3 至 5 月銷售數據，再一起做文案、海報、商品圖、歌曲、旁白與短影音；對外數字由行銷專員回查原始檔。\n待辦：行銷專員下週一完成合併總表、下週三完成分析報告；產品經理下週二確認規格與過敏原；門市店長本週五前提供店內照片；行銷主管下週五審核文案與海報。\n如有遺漏請直接回信，謝謝。\n行銷專員',
+    kpis:[
+      {kpi:'夏季冷萃咖啡杯數',target:'高於試賣期（4 至 5 月）4,986 杯'},
+      {kpi:'夏季冷萃咖啡營業額',target:'高於試賣期（4 至 5 月）598,320 元'}
+    ],
+    ganttTasks:8,
+    risks:[
+      {risk:'各店銷售檔欄名不一致，合併後杯數對不上',fix:'Power Query 先統一欄名，再和核對表比對總計'},
+      {risk:'AI 寫的文案出現誇大用語',fix:'發布前逐句對照誇大與法規用語清單，真人定稿'},
+      {risk:'場景歌曲用免費方案製作，不能對外商用',fix:'對外版本改用付費方案或有授權的音樂'}
+    ],
+    sources:[
+      {name:'示範_產品規格',date:'2027-03-20'},
+      {name:'示範_常見問題FAQ',date:'2027-04-15'},
+      {name:'示範_門市製作SOP',date:'2027-03-28'},
+      {name:'示範_夏季活動辦法',date:'2027-05-20'},
+      {name:'示範_過敏原與保存說明',date:'2027-03-25'}
+    ],
+    kbCorrect:7,kbCited:7,kbOutside:2,kbNoData:2
+  },
+  validate:d=>{const m=[];const e=String(d.email||'').trim();
+    if(e&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))m.push('Email 格式不正確，請再確認（例：name@gmail.com）。');
+    m.push(...negMsgs(d,{verifyCount:'查核處數',ganttTasks:'甘特圖任務數',kbCorrect:'答對題數',kbCited:'附出處題數',kbOutside:'資料外題數',kbNoData:'查無資料題數'}));
+    const kb={kbCorrect:'答對題數',kbCited:'附出處題數',kbOutside:'資料外題數',kbNoData:'查無資料題數'};
+    Object.entries(kb).forEach(([k,l])=>{if(num(d[k])>10)m.push(`${l}不會超過 10 題，請再數一次。`);});
+    if(num(d.kbCited)>num(d.kbCorrect))m.push('附出處的題數不會多於答對題數，請再數一次。');
+    if(num(d.kbNoData)>num(d.kbOutside))m.push('回答查無資料的題數不會多於資料外的題數，請再數一次。');
+    return m;},
+  carry:()=>[]
+},
+/* ---------------------------------------------------------------- 2 */
+{
+  id:2,key:'data',title:'數據與文案',en:'Data & Copy',
+  goal:'檢驗零件 5 至 7：合併總表的列數與總計、一頁分析報告的數字出處、上市文案的字數與用語。',
+  method:{
+    intro:'第二部分是「數據與文案」。主軸是「AI 讀字，程式重算」：列數、杯數、營業額由 Power Query 與樞紐分析算，不由 AI 算；文案是「AI 擬稿，真人定稿」：字數、hashtag、誇大用語都要真人數過。',
+    points:[
+      ['零件 5 合併總表','原始列數減重複列數等於合併後列數；杯數與營業額總計和核對表一致；欄名統一。'],
+      ['零件 6 分析報告','2 張圖表各有標題與一句話結論；發現 3 點、建議 2 點；報告裡每個數字都在樞紐分析找得到。'],
+      ['零件 7 上市文案組','社群貼文 150 字內附 3 個 hashtag；電子報標題 3 版、內文 400 字內；商品頁賣點 3 點；誇大與法規用語 0 處。'],
+      ['數字只照抄來源','報告與文案裡的數字，一個一個回原始檔或樞紐分析找；找不到的就刪掉或改寫。']
+    ],
+    tools:[['Excel Power Query','從資料夾合併、統一欄名、移除重複'],['Excel 樞紐分析','重算總計，對照核對表'],['誇大與法規用語檢查','第一、最好、保證、療效這類字一律不用']],
+    deliverable:'零件 5 至 7 的檢驗結果，以及數字對不上、用語要改的清單。'
+  },
+  guide:[
+    '零件 5：打開合併總表與原始檔，填原始列數、重複列數、合併後列數，再填你的總計與核對表的值。',
+    '勾選合併時做過的整理步驟；沒做的不要勾。',
+    '零件 6：打開分析報告，填 2 張圖表的標題與結論，發現與建議一行一條。',
+    '數報告裡出現幾個數字，再數其中幾個在樞紐分析找得到。',
+    '零件 7：整則社群貼文貼上，系統會數字數與 hashtag；電子報標題一行一版，賣點一行一點。',
+    '按「確認診斷」：系統會重算列數與總計，並掃描貼文、標題與賣點裡的誇大用語。'
+  ],
+  demo:'範例中示範學員把合併後列數寫成 1014，又勾了「已移除重複列」。看診斷如何用「1014 減 3」抓出列數對不上。',
+  sections:[
+    {title:'零件 5：多門市合併總表',fields:[
+      {id:'rawRows',type:'number',label:'原始資料列數（各檔加總，不含標題）',ph:'1014'},
+      {id:'dupRows',type:'number',label:'重複列數',ph:'3'},
+      {id:'mergedRows',type:'number',label:'合併後列數（合併總表實際列數）',ph:'1011'},
+      {id:'totalCups',type:'number',label:'我的杯數總計',ph:'28689'},
+      {id:'totalSales',type:'number',label:'我的營業額總計（元）',ph:'2825540'},
+      {id:'checkCups',type:'number',label:'核對表的杯數總計',ph:'28689'},
+      {id:'checkSales',type:'number',label:'核對表的營業額總計（元）',ph:'2825540'},
+      {id:'prep',type:'checks',label:'合併時做過的整理（做過才勾）',options:PREP}
+    ]},
+    {title:'零件 6：一頁分析報告與 2 張圖表',fields:[
+      {id:'charts',type:'table',label:'圖表',min:2,cols:[
+        {k:'title',l:'圖表標題',t:'text',w:'40%'},{k:'concl',l:'一句話結論',t:'textarea',w:'60%'}]},
+      {id:'findings',type:'textarea',label:'發現（一行一點）'},
+      {id:'suggestions',type:'textarea',label:'建議（一行一點）'},
+      {id:'reportNums',type:'number',label:'報告裡共出現幾個數字',ph:'6'},
+      {id:'tracedNums',type:'number',label:'其中幾個在樞紐分析找得到',ph:'6'}
+    ]},
+    {title:'零件 7：上市文案組',fields:[
+      {id:'post',type:'textarea',label:'社群貼文全文（含 hashtag）'},
+      {id:'mailTitles',type:'textarea',label:'電子報標題（一行一版）'},
+      {id:'mailBodyChars',type:'number',label:'電子報內文字數',ph:'400 字內'},
+      {id:'sellPoints',type:'textarea',label:'商品頁賣點（一行一點）'},
+      {id:'exaggCount',type:'number',label:'誇大與法規用語檢查後，還剩幾處',ph:'0',help:'用 AI 標出可疑用語後，真人逐句改寫，再數剩幾處。'}
+    ]}
+  ],
+  example:{
+    rawRows:1014,dupRows:3,mergedRows:1014,
+    totalCups:28689,totalSales:2825540,checkCups:28689,checkSales:2825540,
+    prep:['欄名已統一（品項、杯數）','日期欄已轉成日期格式','已移除重複列','異常值已標記並回頭確認'],
+    charts:[
+      {title:'各門市營業額（2027 年 3 至 5 月）',concl:'竹北店 1,014,130 元最高，園區店 999,450 元次之。'},
+      {title:'各月杯數（2027 年 3 至 5 月）',concl:'杯數逐月成長，5 月 11,199 杯最高。'}
+    ],
+    findings:'三門市 3 至 5 月杯數合計 28,689 杯，營業額 2,825,540 元。\n夏季冷萃咖啡 4 至 5 月賣出 4,986 杯，營業額 598,320 元。\n園區店 2027/05/20 拿鐵 480 杯是異常值，已標記並請門市確認。',
+    suggestions:'擴大上市時，平日早上的外帶動線優先在竹北店與園區店調整。\n異常值確認前，對外文案不引用含異常值的總數。',
+    reportNums:6,tracedNums:6,
+    post:'晴丘咖啡夏季冷萃咖啡上市！無糖，帶柑橘與可可風味，一杯 120 元。竹北店、東門店、園區店都喝得到，通勤路上外帶一杯，早上更清爽。\n#晴丘咖啡 #夏季冷萃 #通勤咖啡',
+    mailTitles:'夏季冷萃咖啡上市：通勤路上的無糖選擇\n三家門市同步開賣，一杯 120 元\n柑橘與可可風味，早上外帶剛剛好',
+    mailBodyChars:320,
+    sellPoints:'無糖，帶柑橘與可可風味\n一杯 120 元，三家門市都買得到\n平日早上外帶，通勤路上就能喝',
+    exaggCount:0
+  },
+  validate:d=>{const m=negMsgs(d,{rawRows:'原始列數',dupRows:'重複列數',mergedRows:'合併後列數',totalCups:'杯數總計',totalSales:'營業額總計',checkCups:'核對表杯數',checkSales:'核對表營業額',reportNums:'報告數字數',tracedNums:'找得到的數字數',mailBodyChars:'電子報內文字數',exaggCount:'誇大用語處數'});
+    if(num(d.dupRows)>num(d.rawRows))m.push('重複列數不會多於原始列數，請再數一次。');
+    if(num(d.tracedNums)>num(d.reportNums))m.push('找得到的數字不會多於報告裡的數字，請再數一次。');
+    return m;},
+  carry:S=>{const d1=S.d(1);if(!d1)return[];
+    return[{title:'第 1 階段：題目與提示詞規則（參考）',static:[`上市包：${cut(d1.product,30)}`,'提示詞三條必要規則：找不到就說找不到；數字只照抄來源；看到個資或密碼提醒刪除。']}];}
+},
+/* ---------------------------------------------------------------- 3 */
+{
+  id:3,key:'media',title:'視覺影音',en:'Visual & Media',
+  goal:'檢驗零件 8 至 12：海報、商品圖、場景歌曲、本人聲音旁白、產品短影音的尺寸、張數、秒數、字數與授權。',
+  method:{
+    intro:'第三部分是「視覺影音」，五個零件最多，也最容易卡在授權與規格。每個及格標準都數得出來：幾種尺寸、幾張圖、幾秒、幾個字、勾了幾項。救援版也算完成，例如海報做不出來時，交設計單加 1 張 AI 草圖。',
+    points:[
+      ['零件 8 海報與零件 9 商品圖','海報 A4 直式與 1080×1080 各 1 張、文字只放 3 項、主色 2 色以內、標示 AI 生成；商品圖白底、情境、細節各 1 張，外觀對照 5 項全部一致，不誇大。'],
+      ['零件 10 場景歌曲','30 至 60 秒；企劃單 5 欄（用途、場景、曲風、情緒、速度）都填；記錄使用方案與授權範圍。'],
+      ['零件 11 本人聲音旁白','授權檢查表 5 項全勾；30 秒旁白稿 120 至 150 字；試聽讀錯 0 處。'],
+      ['零件 12 產品短影音','30 至 60 秒、直式 9:16；前 3 秒有鉤子；有字幕與片尾行動呼籲；至少用到前面 3 個零件的素材；發布前檢查表全勾。']
+    ],
+    tools:[['Canva','海報兩種尺寸，主色 2 色以內'],['Suno、VoAI','歌曲與旁白，先確認方案與授權'],['Google Vids','直式短影音，字幕與片尾行動呼籲']],
+    deliverable:'零件 8 至 12 的檢驗結果，以及規格、授權要補的地方。'
+  },
+  guide:[
+    '零件 8：選海報完成方式；做完的尺寸才勾，再數圖上文字項數與主色數。',
+    '零件 9：做完的商品圖種類才勾；拿實品或規格逐項對照外觀，一致的才勾。',
+    '零件 10：填歌曲秒數、企劃單 5 欄、使用方案與授權範圍，並選會不會對外發布。',
+    '零件 11：逐項確認授權檢查表，整份旁白稿貼上（系統數字數），再填試聽讀錯幾處。',
+    '零件 12：填影片秒數與比例，勾實際有做到的項目與用到的零件素材。',
+    '按「確認診斷」：系統逐條對照及格標準，並提醒授權風險。'
+  ],
+  demo:'範例的場景歌曲有 75 秒，超過 60 秒上限；看診斷怎麼指出零件 10 還沒過，其餘零件都數得出來而且通過。',
+  sections:[
+    {title:'零件 8：行銷海報',fields:[
+      {id:'posterMode',type:'select',label:'海報完成方式',options:POSTER_MODES,help:'救援版（設計單加 1 張 AI 草圖）也算完成。'},
+      {id:'posterSizes',type:'checks',label:'已完成的尺寸',options:POSTER_SIZES},
+      {id:'posterTextItems',type:'number',label:'圖上文字放了幾項',ph:'3',help:'只放品名、賣點、行動呼籲 3 項。'},
+      {id:'posterColors',type:'number',label:'主色幾色',ph:'2'},
+      {id:'posterAiLabel',type:'select',label:'有沒有標示 AI 生成',options:['已標示','還沒標示']}
+    ]},
+    {title:'零件 9：商品圖 3 張',fields:[
+      {id:'imgTypes',type:'checks',label:'已完成的商品圖',options:IMG_TYPES},
+      {id:'imgMatch',type:'checks',label:'和實品外觀對照，一致的項目',options:IMG_MATCH},
+      {id:'imgExagg',type:'select',label:'商品圖有沒有誇大',options:['沒有誇大','有（例：加大份量、改顏色）']}
+    ]},
+    {title:'零件 10：場景歌曲',fields:[
+      {id:'songSec',type:'number',label:'歌曲成品幾秒',ph:'45'},
+      {id:'songUse',type:'text',label:'企劃單：用途'},
+      {id:'songScene',type:'text',label:'企劃單：場景'},
+      {id:'songGenre',type:'text',label:'企劃單：曲風'},
+      {id:'songMood',type:'text',label:'企劃單：情緒'},
+      {id:'songTempo',type:'text',label:'企劃單：速度'},
+      {id:'songPlan',type:'select',label:'使用方案',options:SONG_PLANS},
+      {id:'songScope',type:'text',label:'授權範圍（可以用在哪裡）',ph:'例：只用於課堂與內部試聽'},
+      {id:'songPublic',type:'select',label:'這首歌會不會對外發布',options:SONG_PUBLIC}
+    ]},
+    {title:'零件 11：本人聲音旁白',fields:[
+      {id:'voiceAuth',type:'checks',label:'授權檢查表（確認過才勾）',options:VOICE_AUTH},
+      {id:'voiceScript',type:'textarea',label:'30 秒旁白稿全文',help:'系統只數字數（不含空白與標點），及格標準是 120 至 150 字。'},
+      {id:'voiceErrors',type:'number',label:'試聽成品，讀錯幾處',ph:'0'}
+    ]},
+    {title:'零件 12：產品短影音',fields:[
+      {id:'videoSec',type:'number',label:'影片幾秒',ph:'45'},
+      {id:'videoRatio',type:'select',label:'畫面比例',options:VIDEO_RATIOS},
+      {id:'videoChecks',type:'checks',label:'影片裡實際有做到的',options:VIDEO_CHECKS},
+      {id:'videoParts',type:'checks',label:'用到前面哪些零件的素材',options:VIDEO_PARTS},
+      {id:'videoPre',type:'checks',label:'發布前檢查表（做過才勾）',options:VIDEO_PRE}
+    ]}
+  ],
+  example:{
+    posterMode:'兩種尺寸完成稿',posterSizes:['A4 直式','1080×1080'],posterTextItems:3,posterColors:2,posterAiLabel:'已標示',
+    imgTypes:['白底主圖','情境圖','細節圖'],imgMatch:['顏色','形狀','容量','配件','標示'],imgExagg:'沒有誇大',
+    songSec:75,songUse:'課堂發表與短影音初剪試聽',songScene:'早上通勤，拿著冷萃走進辦公室',songGenre:'輕快木吉他流行',songMood:'清爽、放鬆',songTempo:'中快板',
+    songPlan:'Suno 免費方案（不可商用）',songScope:'只用於課堂與內部試聽，不對外發布',songPublic:'只在內部或課堂使用',
+    voiceAuth:['只用自己的聲音，不複製別人','已讀過 VoAI 方案條款（能否商用、聲音資料保存）','旁白內容不冒充他人身分','成品標示「AI 合成語音」','已和家人約定通關密語（防詐騙）'],
+    voiceScript:'早上趕著出門，還是想喝一杯好咖啡嗎？晴丘咖啡的夏季冷萃咖啡上市了。無糖，喝得到柑橘與可可的香氣，一杯一百二十元。竹北店、東門店、園區店都買得到，通勤路上外帶一杯，讓早上的工作更清爽。不管是開會前，還是午後想休息一下，來一杯剛剛好。今天就到門市，點一杯夏季冷萃咖啡，替自己的早晨換個口味吧。',
+    voiceErrors:0,
+    videoSec:45,videoRatio:'9:16 直式',videoChecks:['前 3 秒有鉤子','有字幕','片尾有行動呼籲'],
+    videoParts:['文案（零件 7）','海報（零件 8）','商品圖（零件 9）','本人旁白（零件 11）'],
+    videoPre:['長度 30 至 60 秒，比例 9:16','第 1 鏡是鉤子，最後一鏡是行動呼籲','字幕錯字 0 處','價格、日期和事實卡一致，誇大用語 0 處','至少用到 3 個零件','音樂授權已記錄，AI 生成的部分有標示']
+  },
+  validate:d=>negMsgs(d,{posterTextItems:'海報文字項數',posterColors:'主色數',songSec:'歌曲秒數',voiceErrors:'讀錯處數',videoSec:'影片秒數'}),
+  carry:S=>{const d1=S.d(1),d2=S.d(2),out=[];
+    if(d1)out.push({title:'第 1 階段：題目（參考）',static:[`上市包：${cut(d1.product,30)}`]});
+    if(d2){const sp=String(d2.sellPoints||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
+      if(sp.length)out.push({title:'第 2 階段：商品頁賣點（海報文字、旁白稿參考）',static:sp.slice(0,3).map(x=>cut(x,30))});}
+    return out;}
+},
+/* ---------------------------------------------------------------- 4 */
+{
+  id:4,key:'flow',title:'工作流',en:'AI Workflow',
+  goal:'檢驗零件 13：把你的工作串成至少 3 步，每步寫清楚工具、輸入、提示詞、輸出與人工查核點。',
+  method:{
+    intro:'第四部分是「工作流」。個人 AI 工作流說明書要讓同事照著做也能做出一樣的結果：每一步用什麼工具、餵什麼資料、用哪段提示詞、產出什麼、誰在哪裡檢查。不用 AI 的步驟也要寫進來，並列出不交給 AI 的事。',
+    points:[
+      ['至少 3 步串接','前一步的輸出就是下一步的輸入，例：合併總表 → 樞紐分析 → 週報初稿。'],
+      ['每步 5 欄都寫','工具、輸入、提示詞、輸出、人工查核點；不用 AI 的步驟，提示詞欄寫「不用 AI」與做法。'],
+      ['人工查核點','寫成數得出來的檢查，例：週報裡每個數字都回樞紐分析找得到。'],
+      ['不交給 AI 的事','至少 2 件，例：對外公告的最後定稿、異常值要不要更正。']
+    ],
+    tools:[['AI 是手腳不是大腦','判斷與定稿留給人'],['AI 讀字，程式重算','數字交給 Excel 算'],['看到個資或密碼提醒刪除','客戶名單、薪資不餵給 AI']],
+    deliverable:'零件 13 的檢驗結果，以及每一步缺哪一欄。'
+  },
+  guide:[
+    '寫工作流名稱：這份說明書在解決哪一件重複的工作。',
+    '用「前階段帶入」把第 2 階段的合併與樞紐分析步驟帶進來，再補上 AI 的步驟。',
+    '每一步選工具，填輸入、提示詞範本、輸出、人工查核點；不用 AI 的步驟提示詞欄寫「不用 AI：做法」。',
+    '寫不交給 AI 的事，一行一件。',
+    '按「確認診斷」：系統檢查步數、每步 5 欄是否都填，並提醒輸入裡有沒有不該給 AI 的資料。'
+  ],
+  demo:'範例把每週門市銷售週報串成 4 步：Power Query、樞紐分析、ChatGPT 寫週報、ChatGPT 改寫店長公告。前兩步不用 AI，提示詞欄寫「不用 AI」與做法。',
+  sections:[
+    {title:'零件 13：個人 AI 工作流說明書',fields:[
+      {id:'flowName',type:'text',label:'工作流名稱',ph:'例：每週門市銷售週報'},
+      {id:'steps',type:'table',label:'串接步驟',min:3,help:'第一欄（步驟）有填的列才算；有填的列，工具一定要選。',cols:[
+        {k:'step',l:'步驟',t:'text',w:'14%'},{k:'tool',l:'工具',t:'select',o:FLOW_TOOLS,w:'14%'},
+        {k:'input',l:'輸入',t:'textarea',w:'16%'},{k:'prompt',l:'提示詞範本',t:'textarea',w:'24%'},
+        {k:'output',l:'輸出',t:'text',w:'14%'},{k:'check',l:'人工查核點',t:'textarea',w:'18%'}]},
+      {id:'notAI',type:'textarea',label:'不交給 AI 的事（一行一件）'}
+    ]}
+  ],
+  example:{
+    flowName:'每週門市銷售週報',
+    steps:[
+      {step:'合併三門市銷售檔',tool:'Excel Power Query',input:'三門市本週銷售 Excel',prompt:'不用 AI：Power Query「從資料夾」合併，套用已存的欄名統一步驟',output:'合併總表',check:'原始列數減重複列數等於合併後列數'},
+      {step:'算各門市與品項',tool:'Excel 樞紐分析',input:'合併總表',prompt:'不用 AI：重新整理樞紐分析表',output:'各門市、各品項杯數與營業額',check:'總計和合併總表一致'},
+      {step:'寫週報初稿',tool:'ChatGPT',input:'樞紐分析結果表（只貼數字）',prompt:'你是晴丘咖啡的行銷專員。請根據我貼的表格寫 300 字週報，數字只照抄表格，找不到就說找不到。',output:'週報初稿',check:'週報裡每個數字都回樞紐分析找得到'},
+      {step:'改寫店長公告',tool:'ChatGPT',input:'定稿週報',prompt:'請把這份週報改寫成給店長的 5 點公告，不新增數字。看到個資或密碼請提醒我刪除。',output:'店長公告',check:'主管看過再發，不由 AI 直接寄出'}
+    ],
+    notAI:'對外公告的最後定稿與發送\n異常值要不要更正（要回頭問門市）'
+  },
+  carry:S=>{const d1=S.d(1),d2=S.d(2),out=[];
+    if(d2)out.push({title:'第 2 階段：合併與重算 → 串接步驟',note:'帶入後補上 AI 的步驟。',chips:[
+      {label:'Power Query 合併',field:'steps',value:{step:'合併多個銷售檔',tool:'Excel Power Query',input:'各門市銷售 Excel',prompt:'不用 AI：從資料夾合併、統一欄名、移除重複',output:'合併總表',check:'原始列數減重複列數等於合併後列數'}},
+      {label:'樞紐分析重算',field:'steps',value:{step:'重算總計',tool:'Excel 樞紐分析',input:'合併總表',prompt:'不用 AI：重新整理樞紐分析表',output:'各門市、各品項杯數與營業額',check:'總計和核對表一致'}}]});
+    if(d1)out.push({title:'第 1 階段：提示詞四要素（參考）',static:[`角色：${cut(d1.p4role,24)||'－'}`,`任務：${cut(d1.p4task,24)||'－'}`,`格式：${cut(d1.p4format,24)||'－'}`]});
+    return out;}
+},
+/* ---------------------------------------------------------------- 5 */
+{
+  id:5,key:'pitch',title:'發表準備',en:'Pitch Prep',
+  goal:'排好 3 分鐘講稿四段大綱，自評 13 個零件的完成度，和系統檢驗結果對照，寫出補件計畫。',
+  method:{
+    intro:'最後一步把檢驗結果變成發表。及格門檻是 13 個零件完成 11 個以上（80%），而且四部分都有內容。先自己勾完成的零件，系統會拿前四階段的檢驗結果對照；勾了但沒通過的，就是要補的地方。',
+    points:[
+      ['四段大綱','題目（幫誰、解決什麼問題）30 秒、做了哪些零件 60 秒、怎麼驗收 60 秒、限制與下一步 30 秒，合計 180 秒。'],
+      ['講稿 900 字內','全文貼進 Word 看字數，再計時講 1 次。'],
+      ['完成度自己數','「完成」等於這個零件的及格標準全部通過；走救援包 C 最低交件也算完成，另外勾出來。自評要和系統檢驗一致。'],
+      ['補件計畫','每個未過的零件寫：零件編號、走哪一級（原計畫、換路、最低交件）、今晚做哪一步。']
+    ],
+    tools:[['上市包組裝進度表','完成數與燈號（11 個以上綠、8 至 10 個黃、7 個以下紅）'],['救援包三級','A 原計畫、B 換路、C 最低交件'],['AI 擬稿，真人定稿','講稿可請 AI 擬，數字自己核對']],
+    deliverable:'3 分鐘四段大綱、完成度自評、補件計畫，以及完整的上市包檢驗報告。'
+  },
+  guide:[
+    '寫發表題目；用「前階段帶入」把第 1 階段的對象與問題帶進大綱第 1 段。',
+    '大綱四段各填秒數與重點，秒數合計不超過 180 秒。',
+    '填講稿全文字數（Word 字數統計）。',
+    '走了救援包 C 最低交件的零件，在「救援版零件」勾出來；勾你認為已完成的零件，只勾及格標準全部通過或已交救援版的。',
+    '把未過的零件寫進補件計畫，格式：零件 10：走哪一級、今晚做哪一步。',
+    '按「確認診斷」：系統算出完成數、是否達 80%，並指出自評和檢驗不一致、補件計畫漏掉的零件。'
+  ],
+  demo:'範例自評勾了 12 個零件，但系統檢驗只有 10 個通過；補件計畫也只寫了零件 10。看診斷怎麼找出零件 4、5 被勾成完成。',
+  sections:[
+    {title:'3 分鐘講稿大綱',fields:[
+      {id:'talkTitle',type:'text',label:'發表題目',req:true,ph:'例：我的部門新服務上市包'},
+      {id:'outline',type:'table',label:'四段大綱',min:4,help:'四段各一列；秒數合計 180 秒內。',cols:[
+        {k:'part',l:'段落',t:'select',o:OUTLINE_PARTS,w:'30%'},{k:'sec',l:'秒數',t:'number',w:'12%'},{k:'point',l:'重點（2 至 3 個）',t:'textarea',w:'58%'}]},
+      {id:'scriptChars',type:'number',label:'講稿全文字數（Word 字數統計）',ph:'900 字內'}
+    ]},
+    {title:'完成度自評與補件',fields:[
+      {id:'rescueParts',type:'checks',label:'救援版零件（已照救援包 C 最低交件做完）',options:PART_OPTS,help:'救援版也算完成（見救援包說明.md），報告會標「救援」；檔名加「救援」，發表時照實說。'},
+      {id:'selfDone',type:'checks',label:'你認為已完成的零件（及格標準全部通過或已交救援版才勾）',options:PART_OPTS},
+      {id:'fixPlan',type:'textarea',label:'補件計畫（一行一個零件）',ph:'例：零件 10：走 C 最低交件，今晚把歌曲剪到 60 秒內',help:'每行用「零件 N：」開頭，系統才認得出編號。'}
+    ]}
+  ],
+  example:{
+    talkTitle:'晴丘咖啡夏季冷萃咖啡上市包',
+    outline:[
+      {part:'題目：幫誰、解決什麼問題',sec:'30',point:'幫通勤上班族找到不甜、不用等的早晨咖啡'},
+      {part:'做了哪些零件',sec:'60',point:'完成數與燈號；秀海報、商品圖與短影音'},
+      {part:'怎麼驗收',sec:'60',point:'合併總表列數對照核對表；杯數總計 28,689 杯一致'},
+      {part:'限制與下一步',sec:'30',point:'歌曲用免費方案，只能內部使用；下一步改用有授權的音樂'}
+    ],
+    scriptChars:850,
+    rescueParts:[],
+    selfDone:PART_OPTS.filter((_,i)=>i!==9),
+    fixPlan:'零件 10：歌曲剪到 60 秒內，重新匯出。'
+  },
+  validate:d=>{const m=negMsgs(d,{scriptChars:'講稿字數'});
+    if((d.outline||[]).some(r=>num(r.sec)<0))m.push('大綱秒數不可為負數。');
+    return m;},
+  carry:S=>{const d1=S.d(1),out=[];
+    if(d1){const chips=[{label:`題目：${cut(d1.product,16)}`,field:'talkTitle',value:plain(d1.product),replace:true}];
+      if(String(d1.who||'').trim())chips.push({label:`對象與問題 → 大綱第 1 段`,field:'outline',value:{part:OUTLINE_PARTS[0],sec:'30',point:d1.who}});
+      out.push({title:'第 1 階段：題目與對象 → 大綱',chips});}
+    const pr=partResults(S),done=pr.filter(p=>p.ok),miss=pr.filter(p=>!p.ok);
+    out.push({title:'系統檢驗結果（自評前先看）',static:[`目前完成 ${done.length}／13 個零件（門檻 11 個）`,miss.length?`未過：${miss.map(p=>'零件 '+p.n).join('、')}`:'13 個零件都通過']});
+    return out;}
+}
+];
+/* =====================================================================
+   PART A-2：診斷規則（RULES）、擴充分頁（EXTRA_TABS）、成果報告（REPORT）
+   主題：D14 上市包檢驗工作台（五階段，13 個零件對照課程 SPEC 第 11 節及格標準）。視覺化用 rough.js 手繪風（載入失敗時退回一般 SVG）。
+   規則撰寫慣例：
+   - RULES[n]=(d,S)=>({...})：d 是本階段剛確認的資料；S.d(id) 取前階段已確認資料（未確認為 null）
+   - 每條結論用 R('Rn-xx',嚴重度,文字,驗證方式)；嚴重度 h 高／m 中／l 正向／i 資訊
+   - 分數＝本階段及格標準通過條數 ÷ 總條數 × 100；提醒類（info）不計分
+   - 第 5 階段用 partResults(S) 回頭重算第 1 至 4 階段的 13 個零件，算完成數與是否達 80%
+   - 本檔只在函式內使用 PART B 的 helper（R、num、esc、cut…），不可在載入時直接呼叫
+   ===================================================================== */
+const filled=(rows,k)=>(rows||[]).filter(r=>String(r[k]==null?'':r[k]).trim());
+const hasNum=s=>/\d/.test(String(s||''));
+const sumOf=(rows,k)=>(rows||[]).reduce((a,r)=>a+num(r[k]),0);
+const lead=s=>String(s||'').split(/[（(]/)[0].trim();          // 取括號前的主句，避免截斷後括號不成對
+const unquote=s=>String(s||'').trim().replace(/^[「"]+|[」"]+$/g,''); // 去掉填寫者已加的引號，避免「「」」
+const plain=s=>String(s||'').replace(/[「」『』"]/g,'');
+const lines=s=>String(s||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
+const RULES={};
+
+/* ---------------- 手繪風 SVG（rough.js；未載入或出錯時退回一般圖形） ---------------- */
+let _skg=null;
+const skGen=()=>{if(_skg)return _skg;if(typeof rough==='undefined')return null;try{_skg=rough.generator();}catch(e){console.warn('rough.js 初始化失敗，改用一般圖形',e);return null;}return _skg;};
+const skPaths=dr=>(_skg.toPaths(dr)||[]).map(p=>`<path d="${p.d}" stroke="${p.stroke}" stroke-width="${p.strokeWidth}" fill="${p.fill||'none'}" vector-effect="non-scaling-stroke"/>`).join('');
+const skDraw=(make,fallback)=>{const g=skGen();if(!g)return fallback;try{return skPaths(make(g));}catch(e){console.warn('rough.js 繪製失敗',e);return fallback;}};
+const skOpt=(o,base)=>{const opt={...base};['fill','fillStyle','hachureGap','hachureAngle'].forEach(k=>{if(o[k]!=null)opt[k]=o[k];});return opt;};
+const skRect=(x,y,w,h,o)=>{o=o||{};const st=o.stroke||tok('--ink','#2b2622'),sw=o.strokeWidth||1.4;
+  return skDraw(g=>g.rectangle(x,y,w,h,skOpt(o,{roughness:o.roughness!=null?o.roughness:1.4,stroke:st,strokeWidth:sw,seed:o.seed||7})),
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${o.fill||'none'}" stroke="${st}" stroke-width="${sw}" ${o.fill?'fill-opacity=".55"':''} vector-effect="non-scaling-stroke"/>`);};
+const skLine=(x1,y1,x2,y2,o)=>{o=o||{};const st=o.stroke||tok('--ink','#2b2622'),sw=o.strokeWidth||1.4;
+  return skDraw(g=>g.line(x1,y1,x2,y2,{roughness:o.roughness!=null?o.roughness:1.2,stroke:st,strokeWidth:sw,seed:o.seed||7}),
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${st}" stroke-width="${sw}" vector-effect="non-scaling-stroke"/>`);};
+const skBox=(inner,o)=>{o=o||{};return`<div class="skbox ${o.cls||''}"><svg class="skbox-bg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${skRect(2,2,96,96,{stroke:o.stroke||tok('--ink','#2b2622'),seed:o.seed||7,roughness:1.1})}</svg><div class="skbox-in">${inner}</div></div>`;};
+const SK_COL={r:['--red','#c8553d'],y:['--yellow','#d9a23a'],g:['--green','#4f7d5c'],'':['--blue','#2f5d73'],b:['--blue','#2f5d73']};
+const skCol=k=>{const c=SK_COL[k||'']||SK_COL[''];return tok(c[0],c[1]);};
+const skX=(v,max)=>Math.max(0,Math.min(300,max?v/max*300:0));
+/* rows=[{label,value,text?,cls?,band?:[lo,hi]}]；o={max?,cap?,capLabel?}：band 畫建議範圍，cap 畫紅線 */
+const skBars=(rows,o)=>{o=o||{};const max=o.max||Math.max(1,...rows.map(r=>num(r.value)));const cap=o.cap!=null?skX(o.cap,max):null;
+  return`<div class="skbars">${rows.map((r,i)=>{const w=skX(num(r.value),max),col=skCol(r.cls);
+    const band=r.band?skRect(skX(r.band[0],max),1,Math.max(1,skX(r.band[1],max)-skX(r.band[0],max)),16,{stroke:'none',fill:tok('--green-soft','#e3ede2'),fillStyle:'solid',roughness:0.6,seed:30+i}):'';
+    const bar=w>0?skRect(0,3,w,12,{stroke:col,fill:col,fillStyle:'hachure',hachureGap:3.5,hachureAngle:-41,roughness:1.2,seed:11+i}):'';
+    const capL=cap!=null?skLine(cap,0,cap,18,{stroke:tok('--red','#c8553d'),strokeWidth:2,roughness:0.8,seed:50+i}):'';
+    return`<div class="skbar-row"><span title="${esc(r.label)}">${esc(cut(r.label,14))}</span><svg viewBox="0 0 300 18" preserveAspectRatio="none" aria-hidden="true">${band}${bar}${capL}</svg><b>${esc(r.text!=null?r.text:r.value)}</b></div>`;}).join('')}${o.capLabel?`<div class="skbar-cap">${esc(o.capLabel)}</div>`:''}</div>`;};
+
+/* ---------------- 上市包及格標準（課程 SPEC 第 11 節，全班唯一版本） ---------------- */
+const PART_LABELS=['企劃與知識','數據與文案','視覺影音','工作流'];
+const EXAGG=['第一','最好','最強','保證','100%','根治','治療','療效','減肥','消脂','排毒','零風險','唯一','無敵','神奇'];
+const SENSITIVE=['客戶名單','身分證','薪資','合約','員工排班','電話','地址'];
+const has=v=>String(v??'').trim()!=='';
+const cnt=a=>Array.isArray(a)?a.length:0;
+const inR=(v,lo,hi)=>v>=lo&&v<=hi;
+const fmtN=v=>Number(v||0).toLocaleString('en-US');
+const ids=ns=>ns.map(n=>'零件 '+n).join('、');
+const sentences=s=>String(s||'').split(/[。！？!?]/).map(x=>x.trim()).filter(Boolean);
+const tagsOf=s=>String(s||'').match(/#[^\s#]+/g)||[];
+const exaggIn=(...ss)=>EXAGG.filter(w=>ss.some(s=>String(s||'').includes(w)));
+/* 及格標準一條：r 規則編號、std 標準、ok 是否通過、got 實際數到的、fix 未過時怎麼補 */
+const cr=(r,std,ok,got,fix)=>({r,std,ok:!!ok,got,fix});
+/* 提醒（不計分）：on 為真才出現 */
+const note=(r,on,text)=>on?{r,info:true,text}:null;
+
+/* 13 個零件的檢驗：stage 是資料所在階段，part 是 SPEC 四部分（1 至 4） */
+const PART_CHECKS=[
+  {n:1,stage:1,part:1,run:d=>{const sv=cnt(d.sieves),m=lines(d.materials).length,miss4=[['角色','p4role'],['任務','p4task'],['背景','p4bg'],['格式','p4format']].filter(x=>!has(d[x[1]])).map(x=>x[0]),bg=sentences(d.p4bg).length;
+    return[cr('R1-01','選題三個篩子全勾',sv===3,`勾 ${sv}／3`,'回頭換一個熟悉、有素材、可公開的題目，或補齊素材後再勾。'),
+      cr('R1-02','手上素材至少 3 項',m>=3,`${m} 項`,'把手上能用的檔案一行一項列出來，至少 3 項。'),
+      cr('R1-03','提示詞四要素 4 欄都填',!miss4.length,miss4.length?`缺${miss4.join('、')}`:'4 欄都有','補上缺的要素，照角色、任務、背景、格式寫完整。'),
+      cr('R1-04','背景至少 2 句',bg>=2,`${bg} 句`,'背景補到 2 句以上：產品現況一句，資料規則一句（找不到就說找不到）。')];}},
+  {n:2,stage:1,part:1,run:d=>{const dc=lines(d.decisions).length,td=filled(d.todos,'item'),tdBad=td.filter(r=>!has(r.owner)||!has(r.due)).length,vc=num(d.verifyCount),fm=charsOf(d.followMail);
+    return[cr('R1-05','決議至少 3 條',dc>=3,`${dc} 條`,'回逐字稿找出會議決定的事，一行一條，至少 3 條。'),
+      cr('R1-06','待辦至少 5 條，每條有負責人與期限',td.length>=5&&!tdBad,`${td.length} 條${tdBad?`，${tdBad} 條缺負責人或期限`:''}`,'待辦補到 5 條，每條寫負責人（職稱）與期限。'),
+      cr('R1-07','和逐字稿對照查核至少 5 處',vc>=5,`${vc} 處`,'拿紀錄和逐字稿逐段對照，把核對過的地方記下來，至少 5 處。'),
+      cr('R1-08','會後追蹤信 300 字內',inR(fm,1,300),fm?`${fm} 字`:'未貼全文',fm?'追蹤信刪到 300 字內：只留決議、待辦、負責人與期限。':'把追蹤信整封貼上，系統才數得到字數。')];}},
+  {n:3,stage:1,part:1,run:d=>{const k=filled(d.kpis,'kpi'),kBad=k.filter(r=>!hasNum(r.target)).length,g=num(d.ganttTasks),rk=filled(d.risks,'risk'),rBad=rk.filter(r=>!has(r.fix)).length;
+    return[cr('R1-09','指標至少 2 個，目標值可量化',k.length>=2&&!kBad,`${k.length} 個${kBad?`，${kBad} 個目標值沒有數字`:''}`,'每個指標的目標值寫出數字，例：高於試賣期的杯數。'),
+      cr('R1-10','甘特圖或流程圖至少 6 項任務',g>=6,`${g} 項`,'把上市前要做的事拆細，補到 6 項任務以上。'),
+      cr('R1-11','風險至少 3 條，各有對策',rk.length>=3&&!rBad,`${rk.length} 條${rBad?`，${rBad} 條沒有對策`:''}`,'風險補到 3 條，每條寫一個做得到的對策。')];}},
+  {n:4,stage:1,part:1,run:d=>{const s=filled(d.sources,'name'),sBad=s.filter(r=>!hasNum(r.date)).length,c=num(d.kbCorrect),ci=num(d.kbCited),o=num(d.kbOutside),nd=num(d.kbNoData);
+    return[cr('R1-12','來源至少 5 份，各標版本日期',s.length>=5&&!sBad,`${s.length} 份${sBad?`，${sBad} 份沒有日期`:''}`,'來源補到 5 份，每份標上版本日期。'),
+      cr('R1-13','10 題驗收答對 8 題以上，且附出處',c>=8&&ci>=c,`答對 ${c} 題、附出處 ${ci} 題`,c<8?`還差 ${8-c} 題，找出答錯的題目，補來源或改問法後重測。`:'答對的題目都要附出處：在提示詞加「每個答案附來源名稱」。'),
+      cr('R1-14','至少 2 題資料外題目，AI 回答查無資料',o>=2&&nd>=o,`資料外 ${o} 題、回答查無資料 ${nd} 題`,o<2?'補 2 題資料裡沒有的問題，測 AI 會不會說找不到。':'在提示詞加「資料裡沒有就說查無資料」，再測一次。'),
+      note('R1-15',o>0&&nd<o,`資料外的 ${o} 題裡，只有 ${nd} 題回答查無資料：其他題 AI 可能自己編了答案，對外使用前要逐題核對。`)];}},
+  {n:5,stage:2,part:2,run:d=>{const raw=num(d.rawRows),dup=num(d.dupRows),mg=num(d.mergedRows),tc=num(d.totalCups),ts=num(d.totalSales),cc=num(d.checkCups),cs=num(d.checkSales),pp=d.prep||[];
+    return[cr('R2-01','原始列數減重複列數等於合併後列數',raw>0&&mg>0&&raw-dup===mg,`${raw} 減 ${dup} 應為 ${raw-dup}，填 ${mg}`,'回合併總表重數列數；移除了重複列，合併後列數就要少掉那幾列。'),
+      cr('R2-02','杯數與營業額總計和核對表一致',tc>0&&ts>0&&tc===cc&&ts===cs,`杯數 ${fmtN(tc)}／${fmtN(cc)}、營業額 ${fmtN(ts)}／${fmtN(cs)}`,'用樞紐分析重算總計；和核對表不一致時，先查欄名與重複列。'),
+      cr('R2-03','欄名統一',pp.includes(PREP[0]),pp.includes(PREP[0])?'已統一':'未勾','在 Power Query 把各檔欄名統一（品項、杯數），再重新合併。'),
+      note('R2-11',pp.includes(PREP[2])&&dup>0&&mg===raw,`勾了「已移除重複列」，但合併後列數 ${mg} 等於原始列數，重複的 ${dup} 列可能還在。`)];}},
+  {n:6,stage:2,part:2,run:d=>{const ch=filled(d.charts,'title'),chBad=ch.filter(r=>!has(r.concl)).length,f=lines(d.findings).length,sg=lines(d.suggestions).length,rn=num(d.reportNums),tn=num(d.tracedNums);
+    return[cr('R2-04','2 張圖表，各有標題與一句話結論',ch.length>=2&&!chBad,`${ch.length} 張${chBad?`，${chBad} 張缺結論`:''}`,'每張圖表下面寫一句話結論，讀者不看圖也知道重點。'),
+      cr('R2-05','發現 3 點、建議 2 點',f>=3&&sg>=2,`發現 ${f} 點、建議 ${sg} 點`,'發現補到 3 點、建議補到 2 點，每點對應一個數字。'),
+      cr('R2-06','報告每個數字都在樞紐分析找得到',rn>0&&tn===rn,`${tn}／${rn} 個找得到`,'找不到出處的數字刪掉，或回樞紐分析找到正確值再改。')];}},
+  {n:7,stage:2,part:2,run:d=>{const pc=charsOf(d.post),tg=tagsOf(d.post).length,mt=lines(d.mailTitles).length,mb=num(d.mailBodyChars),sp=lines(d.sellPoints).length,ex=exaggIn(d.post,d.sellPoints,d.mailTitles),ec=num(d.exaggCount),ecF=has(d.exaggCount);
+    return[cr('R2-07','社群貼文 150 字內，附 3 個 hashtag',inR(pc,1,150)&&tg===3,`${pc} 字、${tg} 個 hashtag`,'貼文刪到 150 字內，hashtag 剛好 3 個。'),
+      cr('R2-08','電子報標題 3 版，內文 400 字內',mt>=3&&inR(mb,1,400),`標題 ${mt} 版、內文 ${mb} 字`,'標題寫滿 3 版，內文刪到 400 字內。'),
+      cr('R2-09','商品頁賣點 3 點',sp>=3,`${sp} 點`,'賣點補到 3 點，每點都能在產品規格找到依據。'),
+      cr('R2-10','誇大與法規用語 0 處',ecF&&ec===0&&!ex.length,ex.length?`掃到「${ex.join('、')}」`:ecF?`自查剩 ${ec} 處`:'未填自查處數',ex.length?`改寫「${ex.join('、')}」這類字，換成查得到的事實。`:'用 AI 標出可疑用語，真人逐句改寫後再數一次。')];}},
+  {n:8,stage:3,part:3,run:d=>{const md=d.posterMode||'',rescue=md===POSTER_MODES[1],none=!md||md===POSTER_MODES[2],sz=cnt(d.posterSizes),tx=num(d.posterTextItems),co=num(d.posterColors),nf='先交救援版：設計單加 1 張 AI 草圖。';
+    return[cr('R3-01','A4 直式與 1080×1080 各 1 張',rescue||(!none&&sz===2),rescue?'救援版':none?'還沒做':`${sz}／2 種尺寸`,none?nf:'用 Canva 調整尺寸，補做缺的尺寸。'),
+      cr('R3-02','圖上文字只放 3 項',!none&&tx===3,none?'還沒做':`${tx} 項`,none?nf:'文字只留品名、賣點、行動呼籲 3 項。'),
+      cr('R3-03','主色 2 色以內',!none&&inR(co,1,2),none?'還沒做':`${co} 色`,none?nf:'主色收斂到 2 色以內，其餘用黑白灰。'),
+      cr('R3-04','標示 AI 生成',!none&&d.posterAiLabel==='已標示',none?'還沒做':d.posterAiLabel||'未選',none?nf:'在海報角落加上「AI 生成」標示。'),
+      note('R3-01',rescue,'海報走救援版（設計單加 1 張 AI 草圖），算完成；時間夠再補兩種尺寸完成稿。')];}},
+  {n:9,stage:3,part:3,run:d=>{const ty=cnt(d.imgTypes),mt=cnt(d.imgMatch);
+    return[cr('R3-05','白底主圖、情境圖、細節圖各 1 張',ty===3,`${ty}／3 種`,'補做缺的商品圖種類。'),
+      cr('R3-06','外觀對照 5 項全部一致',mt===5,`${mt}／5 項一致`,'拿實品逐項對照，不一致的圖重新生成或修圖。'),
+      cr('R3-07','商品圖不誇大',d.imgExagg==='沒有誇大',lead(d.imgExagg)||'未選','把加大份量、改顏色的圖換掉，照實品重做。')];}},
+  {n:10,stage:3,part:3,run:d=>{const s=num(d.songSec),miss=[['用途','songUse'],['場景','songScene'],['曲風','songGenre'],['情緒','songMood'],['速度','songTempo']].filter(x=>!has(d[x[1]])).map(x=>x[0]);
+    const free=String(d.songPlan||'').includes('免費'),pub=d.songPublic===SONG_PUBLIC[0];
+    return[cr('R3-08','歌曲 30 至 60 秒',inR(s,30,60),`${s} 秒`,s>60?`剪到 60 秒內（目前多 ${s-60} 秒），重新匯出。`:'補到 30 秒以上，或重新生成較長的版本。'),
+      cr('R3-09','企劃單 5 欄都填',!miss.length,miss.length?`缺${miss.join('、')}`:'5 欄都有','補齊企劃單：用途、場景、曲風、情緒、速度。'),
+      cr('R3-10','記錄使用方案與授權範圍',has(d.songPlan)&&has(d.songScope),`${has(d.songPlan)?'方案已選':'方案未選'}、${has(d.songScope)?'範圍已寫':'範圍未寫'}`,'寫下用哪個方案、可以用在哪裡（課堂、內部或對外）。'),
+      note('R3-19',free&&pub,'歌曲用 Suno 免費方案，卻要對外發布：免費方案不可商用，升級後也不回溯授權；對外版本請改用付費方案或有授權的音樂。')];}},
+  {n:11,stage:3,part:3,run:d=>{const a=cnt(d.voiceAuth),c=charsOf(d.voiceScript),e=num(d.voiceErrors);
+    return[cr('R3-11','授權檢查表 5 項全勾',a===5,`${a}／5 項`,'逐項確認授權檢查表，沒做到的先補再錄。'),
+      cr('R3-12','30 秒旁白稿 120 至 150 字',inR(c,120,150),c?`${c} 字`:'未貼稿',!c?'把旁白稿整份貼上，系統才數得到字數。':c>150?`刪 ${c-150} 字以上。`:`補 ${120-c} 字以上。`),
+      cr('R3-13','試聽讀錯 0 處',has(d.voiceErrors)&&e===0,has(d.voiceErrors)?`${e} 處`:'未填','讀錯的字改寫成好讀的說法，或加標點斷句後重新生成。')];}},
+  {n:12,stage:3,part:3,run:d=>{const s=num(d.videoSec),vr=d.videoRatio===VIDEO_RATIOS[0],vc=d.videoChecks||[],vp=cnt(d.videoParts),pre=cnt(d.videoPre),sub=vc.includes(VIDEO_CHECKS[1]),cta=vc.includes(VIDEO_CHECKS[2]);
+    return[cr('R3-14','30 至 60 秒、直式 9:16',inR(s,30,60)&&vr,`${s} 秒、${d.videoRatio||'比例未選'}`,'改成 9:16 直式，長度剪到 30 至 60 秒。'),
+      cr('R3-15','前 3 秒有鉤子',vc.includes(VIDEO_CHECKS[0]),vc.includes(VIDEO_CHECKS[0])?'有':'沒有','開頭 3 秒放一個問題或最吸睛的畫面。'),
+      cr('R3-16','有字幕與片尾行動呼籲',sub&&cta,`${sub?'有字幕':'沒有字幕'}、${cta?'有行動呼籲':'沒有行動呼籲'}`,'補上字幕，片尾加一句行動呼籲。'),
+      cr('R3-17','至少用到前面 3 個零件的素材',vp>=3,`${vp} 個零件`,'把文案、海報、商品圖或旁白放進影片，至少 3 個零件。'),
+      cr('R3-18','發布前檢查表全勾',pre===VIDEO_PRE.length,`${pre}／${VIDEO_PRE.length} 項`,'逐項做完發布前檢查，再發布。')];}},
+  {n:13,stage:4,part:4,run:d=>{const st=filled(d.steps,'step'),COLS=[['tool','工具'],['input','輸入'],['prompt','提示詞'],['output','輸出'],['check','人工查核點']];
+    const gaps=st.map((r,i)=>({i:i+1,m:COLS.filter(c=>!has(r[c[0]])).map(c=>c[1])})).filter(x=>x.m.length);
+    const na=lines(d.notAI).length,sens=SENSITIVE.filter(w=>st.some(r=>String(r.input||'').includes(w)||String(r.prompt||'').includes(w)));
+    return[cr('R4-01','至少 3 步串接',st.length>=3,`${st.length} 步`,'把工作拆成至少 3 步，前一步的輸出是下一步的輸入。'),
+      cr('R4-02','每步寫工具、輸入、提示詞、輸出、人工查核點',st.length>0&&!gaps.length,gaps.length?gaps.slice(0,3).map(g=>`第 ${g.i} 步缺${g.m.join('、')}`).join('；'):`${st.length} 步都齊`,'補齊每一步缺的欄位；不用 AI 的步驟，提示詞欄寫「不用 AI」與做法。'),
+      cr('R4-03','至少 2 件不交給 AI 的事',na>=2,`${na} 件`,'寫下至少 2 件由人判斷或定稿的事。'),
+      note('R4-04',sens.length>0,`輸入或提示詞提到「${sens.join('、')}」：這類資料不要貼給 AI，先去識別化，或只給欄位名稱。`)];}}
+];
+const evalPart=(pc,d)=>{const cs=pc.run(d||{}).filter(Boolean),sc=cs.filter(c=>!c.info),fails=sc.filter(c=>!c.ok);
+  return{n:pc.n,name:PART_NAMES[pc.n-1],part:pc.part,stage:pc.stage,cs,sc,pass:sc.length-fails.length,ok:!fails.length,fails};};
+/* 13 個零件的檢驗結果（第 5 階段規則、第 5 階段帶入共用；未確認的階段當作空白） */
+const partResults=S=>PART_CHECKS.map(pc=>evalPart(pc,S.d(pc.stage)||{}));
+/* 「零件 N：名稱」取出 N */
+const partNoOf=s=>parseInt(String(s).replace(/^\D+/,''),10);
+/* 救援包 C 最低交件也算完成（救援包說明.md）：第 5 階段勾的救援版零件，未過的改計完成並標 rescue */
+const withRescue=(pr,d5)=>{const rs=((d5||{}).rescueParts||[]).map(partNoOf);return pr.map(p=>!p.ok&&rs.includes(p.n)?{...p,ok:true,rescue:true}:p);};
+const lightOf=k=>k>=11?'g':k>=8?'y':'r';
+const LIGHT_TXT={g:'綠燈',y:'黃燈',r:'紅燈'};
+
+/* 逐條判讀：通過列為正向，未過列為高嚴重度並附補法；提醒不計分 */
+const judge=groups=>{const A=[],C=[];let pass=0,tot=0;
+  groups.forEach(g=>g.cs.filter(Boolean).forEach(c=>{if(c.info){A.push(R(c.r,'i',`${g.tag}｜${c.text}`));return;}tot++;
+    if(c.ok){pass++;A.push(R(c.r,'l',`${g.tag}｜${c.std}：通過（${c.got}）`));}
+    else{A.push(R(c.r,'h',`${g.tag}｜${c.std}：未過（${c.got}）`));C.push(R(c.r,'m',`${g.tag}：${c.fix}`));}}));
+  return{A,C,pass,tot,score:tot?Math.round(pass/tot*100):0};};
+
+const partVisual=res=>`<h4>零件檢驗表</h4><div class="tbl-wrap"><table class="tbl compact"><tr><th>零件</th><th>及格標準</th><th>結果</th></tr>${res.map(p=>p.sc.map((c,i)=>`<tr>${i?'':`<td rowspan="${p.sc.length}"><b>零件 ${p.n}</b><div class="tiny muted">${esc(p.name)}</div></td>`}<td>${esc(c.std)}</td><td>${c.ok?'<span class="badge g">✓ 通過</span>':`<span class="badge r">✗ 未過</span><div class="tiny muted">${esc(c.got)}</div>`}</td></tr>`).join('')).join('')}</table></div>
+  <h4 class="mt12">各零件通過條數</h4>${skBars(res.map(p=>({label:`零件 ${p.n}`,value:p.pass,text:`${p.pass}／${p.sc.length}`,cls:p.ok?'g':'r'})),{max:Math.max(1,...res.map(p=>p.sc.length))})}<p class="tiny muted mt8">綠色＝這個零件的及格標準全部通過，算完成；紅色＝還有標準未過。</p>`;
+
+const stageRules=(st,d,hyp,doneNext)=>{const res=PART_CHECKS.filter(p=>p.stage===st).map(p=>evalPart(p,d)),j=judge(res.map(p=>({tag:`零件 ${p.n}`,cs:p.cs}))),bad=res.filter(p=>!p.ok);
+  const N=[R(`R${st}-N1`,bad.length?'h':'m',bad.length?`今天先補${ids(bad.map(p=>p.n))}，補完回來修改資料，再按一次「確認診斷」。`:doneNext),
+    R(`R${st}-N2`,'m','把這一階段的零件檔案放進同一個資料夾，檔名加零件編號，發表時找得到。')];
+  const M=[{label:'通過條數',value:`${j.pass}／${j.tot}`,cls:j.pass===j.tot?'g':'r'},...res.map(p=>({label:`零件 ${p.n}`,value:p.ok?'完成':`${p.pass}／${p.sc.length}`,cls:p.ok?'g':'r'}))];
+  return{score:j.score,scoreLabel:'及格標準達成率',metrics:M,assessment:j.A,hypotheses:[hyp],recommendations:j.C,nextActions:N,visual:partVisual(res)};};
+
+/* ---------------------------------------------------------------- 1 企劃與知識 */
+RULES[1]=d=>stageRules(1,d,R('R1-16','m','換一個人、換一種問法，你的知識庫仍能答對並附出處。','請同組同學用自己的話問 3 題，看 AI 是否答對並附出處、資料外的題目是否回答查無資料。'),'零件 1 至 4 都通過，進第 2 階段檢驗數據與文案。');
+/* ---------------------------------------------------------------- 2 數據與文案 */
+RULES[2]=d=>stageRules(2,d,R('R2-12','m','換一個人重算，合併總表的列數與總計也會得到一樣的數字。','請同組同學打開你的合併總表與核對表重數一次；數字不同，就回頭查欄名與重複列。'),'零件 5 至 7 都通過，進第 3 階段檢驗視覺影音。');
+/* ---------------------------------------------------------------- 3 視覺影音 */
+RULES[3]=d=>stageRules(3,d,R('R3-20','m','短影音在手機上，前 3 秒就能讓人停下來看。','請 3 位沒看過的人用手機看前 3 秒，問他們會不會繼續看下去。'),'零件 8 至 12 都通過，進第 4 階段檢驗工作流。');
+/* ---------------------------------------------------------------- 4 工作流 */
+RULES[4]=d=>stageRules(4,d,R('R4-05','m','同事只看你的工作流說明書，也能做出一樣的結果。','請一位同事只看說明書照做一次，記下他卡住的步驟，再補進說明書。'),'零件 13 通過，進第 5 階段準備發表。');
+
+/* ---------------------------------------------------------------- 5 發表準備（回頭重算 13 個零件） */
+RULES[5]=(d,S)=>{const pr=withRescue(partResults(S),d),resc=pr.filter(p=>p.rescue).map(p=>p.n),miss=pr.filter(p=>!p.ok),k=pr.length-miss.length,light=lightOf(k);
+  const per=PART_LABELS.map((l,i)=>({l,all:pr.filter(p=>p.part===i+1).length,ok:pr.filter(p=>p.part===i+1&&p.ok).length})),empty=per.filter(p=>!p.ok);
+  const ol=filled(d.outline,'part'),olMiss=OUTLINE_PARTS.filter(p=>!ol.some(r=>r.part===p&&has(r.point))),sec=sumOf(ol,'sec'),sc=num(d.scriptChars);
+  const sel=(d.selfDone||[]).map(partNoOf).filter(n=>n>=1&&n<=13),wrong=sel.filter(n=>!pr[n-1].ok);
+  const planned=[...String(d.fixPlan||'').matchAll(/零件\s*(\d+)/g)].map(m=>+m[1]),unplanned=miss.filter(p=>!planned.includes(p.n));
+  const easiest=[...miss].sort((a,b)=>a.fails.length-b.fails.length||a.n-b.n).slice(0,Math.max(0,11-k)).map(p=>p.n);
+  const assemble=[
+    cr('R5-01','13 個零件完成 11 個以上（80%）',k>=11,`完成 ${k} 個，${LIGHT_TXT[light]}`,`還差 ${11-k} 個；建議先補${ids(easiest)}（未過的零件裡，差的及格標準最少）。`),
+    cr('R5-02','四部分都有內容（每部分至少 1 個零件完成）',!empty.length,per.map(p=>`${p.l} ${p.ok}／${p.all}`).join('、'),`${empty.map(p=>p.l).join('、')}還沒有完成的零件，至少先補 1 個（可用最低交件版）。`),
+    note('R5-09',resc.length>0,`${ids(resc)} 以救援版（C 最低交件）計入完成：檔名加「救援」，發表時照實說是救援版。`)];
+  const pitch=[
+    cr('R5-03','3 分鐘講稿四段大綱都有',!olMiss.length,olMiss.length?`缺「${olMiss.map(p=>p.split('：')[0]).join('、')}」`:'四段都有',`補上「${olMiss.join('、')}」這一段的重點。`),
+    cr('R5-04','大綱合計 180 秒內',inR(sec,1,180),`${sec} 秒`,sec>180?`刪掉 ${sec-180} 秒：先縮「做了哪些零件」的細節。`:'每段填上秒數。'),
+    cr('R5-05','講稿 900 字內',inR(sc,1,900),sc?`${sc} 字`:'未填',sc>900?`刪 ${sc-900} 字以上，再計時講一次。`:'寫好講稿，填上 Word 字數統計的字數。'),
+    cr('R5-06','自評勾的零件都通過檢驗',sel.length>0&&!wrong.length,!sel.length?'未勾':wrong.length?`${ids(wrong)} 勾了完成，但檢驗未過`:`勾 ${sel.length} 個都通過`,!sel.length?'勾選你認為已完成的零件。':`取消勾選${ids(wrong)}；補到及格，或交了救援版並勾進「救援版零件」，再勾回來。`),
+    cr('R5-07','補件計畫涵蓋所有未過零件',!unplanned.length,!miss.length?'13 個零件都通過，不用補件':unplanned.length?`漏寫${ids(unplanned.map(p=>p.n))}`:`${miss.length} 個未過零件都有寫`,`補件計畫加上${ids(unplanned.map(p=>p.n))}，每行寫「零件 N：走哪一級、今晚做哪一步」。`)];
+  const j=judge([{tag:'上市包組裝',cs:assemble},{tag:'發表準備',cs:pitch}]);
+  const N=[R('R5-N1',miss.length?'h':'m',miss.length?`今晚照補件計畫補${ids(miss.map(p=>p.n))}，補完回前面階段修改資料、重新確認，完成數會自動更新。`:'13 個零件都通過：到「上市包檢驗報告」下載 PDF，寄給老師。'),
+    R('R5-N2','m','照四段大綱用手機計時講一次，超過 180 秒就刪細節，第 15 堂發表就用這一版。')];
+  const M=[{label:'完成零件',value:`${k}／13`,cls:light},{label:'是否達 80%（11 個）',value:k>=11?'已達':'未達',cls:k>=11?'g':'r'},{label:'四部分有完成',value:`${4-empty.length}／4`,cls:empty.length?'r':'g'},{label:'大綱秒數',value:`${sec} 秒`,cls:inR(sec,1,180)?'g':'r'}];
+  const visual=`<h4>13 個零件檢驗結果</h4><div class="tbl-wrap"><table class="tbl compact"><tr><th>零件</th><th>部分</th><th>系統檢驗</th><th>你的自評</th></tr>${pr.map(p=>{const me=sel.includes(p.n);return`<tr><td><b>零件 ${p.n}</b> ${esc(p.name)}</td><td>${PART_LABELS[p.part-1]}</td><td>${p.rescue?'<span class="badge y">救援</span><div class="tiny muted">C 最低交件（自報）</div>':p.ok?'<span class="badge g">✓ 完成</span>':`<span class="badge r">✗ 未過</span><div class="tiny muted">${esc(p.fails.map(f=>f.std).join('；'))}</div>`}</td><td>${me?(p.ok?'<span class="badge g">已勾</span>':'<span class="badge y">已勾，不一致</span>'):'<span class="tiny muted">未勾</span>'}</td></tr>`;}).join('')}</table></div>
+  <h4 class="mt12">完成數與及格門檻</h4>${skBars([{label:'完成零件',value:k,text:`${k}／13`,cls:light}],{max:13,cap:11,capLabel:'紅線＝及格門檻 11 個（80%）；11 個以上綠燈、8 至 10 個黃燈、7 個以下紅燈'})}
+  <h4 class="mt12">四部分完成數</h4>${skBars(per.map(p=>({label:p.l,value:p.ok,text:`${p.ok}／${p.all}`,cls:p.ok===p.all?'g':p.ok?'y':'r'})),{max:5})}<p class="tiny muted mt8">及格：13 個零件完成 11 個以上，而且四部分都有完成的零件；救援版（C 最低交件）也算完成。</p>`;
+  return{score:j.score,scoreLabel:'組裝與發表達成率',metrics:M,assessment:j.A,hypotheses:[R('R5-08','m','台上實際講，你的 3 分鐘發表也不會超過 180 秒。','用手機計時照大綱講一次，記下每段實際秒數，超過就刪細節。')],recommendations:j.C,nextActions:N,visual};};
+
+/* 本主題沒有擴充分頁 */
+const EXTRA_TABS=[];
+
+/* =====================================================================
+   成果報告設定（renderReport 讀取）
+   ctx={n,all,d:id=>已確認資料或{},dx:id=>診斷或null,avgScore}
+   subtitle、coverLines 由引擎 esc，這裡回傳純文字；summary 回傳 HTML，使用者文字要自己 esc
+   ===================================================================== */
+const REPORT={
+  eyebrow:'LAUNCH PACK QC REPORT',
+  title:'上市包檢驗報告',
+  subtitle:c=>plain(cut(c.d(1).product,40))||APP.topic,
+  coverLines:c=>{const d1=c.d(1),d5=c.d(5),L=[];
+    if(d1.name)L.push(`檢驗人：${d1.name}`);
+    if(d1.email)L.push(`Email：${d1.email}`);
+    if(d1.product)L.push(`上市包：${plain(d1.product)}`);
+    if(d5.talkTitle)L.push(`發表題目：${plain(d5.talkTitle)}`);
+    return L;},
+  caseLines:()=>[],
+  summary:c=>{const na='<span class="muted">（待完成）</span>',conf=st=>!!c.dx(st);
+    const pr=withRescue(PART_CHECKS.map(pc=>({...evalPart(pc,c.d(pc.stage)),conf:conf(pc.stage)})),c.d(5));
+    const all4=[1,2,3,4].every(conf),k=pr.filter(p=>p.conf&&p.ok).length,light=lightOf(k);
+    const parts=PART_LABELS.filter((_,i)=>pr.some(p=>p.part===i+1&&p.conf&&p.ok)).length,d5=c.d(5);
+    const kpi=(cls,v,l)=>`<div class="kpi ${cls}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+    const res=p=>!p.conf?'<span class="badge y">待檢驗</span>':p.rescue?'<span class="badge y">救援</span>':p.ok?'<span class="badge g">✓ 完成</span>':'<span class="badge r">✗ 未過</span>';
+    return`<div class="grid g4">${kpi(all4?light:'b',`${k}／13`,'零件完成數')}${kpi(all4?(k>=11?'g':'r'):'b',all4?(k>=11?'已達 80%':'未達 80%'):'檢驗中','是否達 80%（11 個）')}${kpi(parts===4?'g':'y',`${parts}／4`,'四部分有完成')}${kpi('b',c.avgScore||'－','平均達成率')}</div>
+    <div class="tbl-wrap mt12"><table class="tbl compact"><tr><th>零件</th><th>部分</th><th>結果</th><th>未過的標準</th></tr>${pr.map(p=>`<tr><td><b>${p.n}</b> ${esc(p.name)}</td><td>${PART_LABELS[p.part-1]}</td><td>${res(p)}</td><td class="small">${p.conf&&!p.ok?esc(p.fails.map(f=>f.std).join('；')):'<span class="muted">－</span>'}</td></tr>`).join('')}</table></div>
+    <ul class="clean mt12 small">
+      <li><b>組裝結果：</b>${all4?`${LIGHT_TXT[light]}；${k>=11&&parts===4?'已達及格（11 個以上且四部分都有完成）':'尚未及格（需 11 個以上且四部分都有完成）'}`:na}</li>
+      <li><b>發表題目：</b>${d5.talkTitle?esc(d5.talkTitle):na}</li>
+      <li><b>補件計畫：</b>${has(d5.fixPlan)?esc(lines(d5.fixPlan).join('；')):na}</li></ul>`;},
+  sections:[
+    {title:'二、企劃與知識（零件 1 至 4）',stages:[1]},
+    {title:'三、數據與文案（零件 5 至 7）',stages:[2]},
+    {title:'四、視覺影音（零件 8 至 12）',stages:[3]},
+    {title:'五、工作流（零件 13）',stages:[4]},
+    {title:'六、發表準備',stages:[5]}
+  ]};
+/* =====================================================================
+   PART B：通用核心引擎（換主題時通常不需修改）
+   依賴 PART A 的：APP、CASE、AVATAR_SVG、STAGES、RULES、EXTRA_TABS、REPORT
+   ===================================================================== */
+
+/* ---------------- 共用小工具（RULES 內可直接使用） ---------------- */
+const R=(rule,sev,text,verify)=>({rule,sev,text,verify});
+const num=v=>{const n=parseFloat(v);return isNaN(n)?0:n};
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cut=(s,n)=>{s=String(s||'');return s.length>n?s.slice(0,n)+'…':s};
+const barRows=(rows,max)=>rows.map(r=>`<div class="bar-row"><span title="${esc(r.label)}">${esc(cut(r.label,14))}</span><div class="bar"><i class="${r.cls||''}" style="width:${Math.min(100,pct(r.value,max))}%"></i></div><b>${r.text!=null?r.text:r.value}</b></div>`).join('');
+
+/* 泳道流程圖：steps=[{step,lane,work,wait,value|ecrs}]；colorBy(s) 回傳 'r'|'y'|'g'|''（預設藍） */
+function swimlaneSVG(steps,colorBy){
+  steps=steps.filter(s=>s.step);if(!steps.length)return'';
+  const lanes=[...new Set(steps.map(s=>s.lane||'未指定'))];
+  const colW=132,laneH=78,left=150,top=30;const W=left+steps.length*colW+20,Hh=top+lanes.length*laneH+10;
+  let svg=`<svg viewBox="0 0 ${W} ${Hh}" xmlns="http://www.w3.org/2000/svg" font-family="inherit" font-size="11">`;
+  svg+=`<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#8795a7"/></marker></defs>`;
+  lanes.forEach((l,i)=>{const y=top+i*laneH;svg+=`<rect x="0" y="${y}" width="${W}" height="${laneH}" fill="${i%2?'#f8fafc':'#ffffff'}" stroke="#e3e9f2"/><text x="10" y="${y+laneH/2+4}" font-weight="700" fill="#0f2a4a">${esc(cut(l,11))}</text>`;});
+  const color=s=>{const v=colorBy(s);return v==='r'?['#fde8e8','#dc2626']:v==='y'?['#fff4dd','#b7791f']:v==='g'?['#e7f7ec','#16a34a']:['#e8efff','#2563eb']};
+  const pos=steps.map((s,i)=>{const li=lanes.indexOf(s.lane||'未指定');return{x:left+i*colW+8,y:top+li*laneH+12,w:colW-16,h:laneH-24}});
+  pos.forEach((p,i)=>{if(i<pos.length-1){const n=pos[i+1];svg+=`<path d="M${p.x+p.w},${p.y+p.h/2} C${p.x+p.w+10},${p.y+p.h/2} ${n.x-10},${n.y+n.h/2} ${n.x},${n.y+n.h/2}" fill="none" stroke="#8795a7" stroke-width="1.5" marker-end="url(#arr)"/>`}});
+  steps.forEach((s,i)=>{const p=pos[i],[bg,st]=color(s);svg+=`<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="8" fill="${bg}" stroke="${st}" stroke-width="1.5"/><text x="${p.x+8}" y="${p.y+18}" font-weight="700" fill="#1b2a41">${i+1}. ${esc(cut(s.step,8))}</text><text x="${p.x+8}" y="${p.y+34}" fill="#5b6b7f" font-size="10">作業 ${num(s.work)}h｜等待 ${num(s.wait)}h</text><text x="${p.x+8}" y="${p.y+48}" fill="${st}" font-size="10">${esc(cut(s.value||s.ecrs||'',10))}</text>`;});
+  return svg+'</svg>';
+}
+
+/* 魚骨圖：d 需含 problem 與六大類欄位；cats 可自訂 [[欄位id,標籤]]×6 */
+const FISHBONE_CATS=[['fb_man','人'],['fb_machine','機／系統'],['fb_material','料／資料'],['fb_method','法／流程'],['fb_env','環'],['fb_measure','量測']];
+function fishboneSVG(d,cats){
+  cats=cats||FISHBONE_CATS;
+  const W=900,Hh=330,spineY=165,headX=700;
+  let s=`<svg viewBox="0 0 ${W} ${Hh}" xmlns="http://www.w3.org/2000/svg" font-size="10.5" font-family="inherit">`;
+  s+=`<line x1="40" y1="${spineY}" x2="${headX}" y2="${spineY}" stroke="#0f2a4a" stroke-width="3"/><polygon points="${headX},${spineY-8} ${headX+12},${spineY} ${headX},${spineY+8}" fill="#0f2a4a"/>`;
+  s+=`<rect x="${headX+14}" y="${spineY-48}" width="176" height="96" rx="10" fill="#fde8e8" stroke="#dc2626" stroke-width="1.5"/>`;
+  const prob=cut(d.problem||'問題',60);const lines=[];for(let i=0;i<prob.length;i+=13)lines.push(prob.slice(i,i+13));
+  lines.slice(0,5).forEach((l,i)=>{s+=`<text x="${headX+22}" y="${spineY-30+i*16}" fill="#7f1d1d" font-weight="700">${esc(l)}</text>`});
+  cats.forEach((c,i)=>{const top=i<3;const x=90+(i%3)*210;const yEnd=top?40:290;const txt=(d[c[0]]||'').trim();
+    s+=`<line x1="${x+70}" y1="${spineY}" x2="${x}" y2="${yEnd}" stroke="#2563eb" stroke-width="2"/>`;
+    s+=`<rect x="${x-34}" y="${top?yEnd-28:yEnd+4}" width="80" height="22" rx="6" fill="#0f2a4a"/><text x="${x+6}" y="${top?yEnd-13:yEnd+19}" fill="#fff" font-weight="700" text-anchor="middle">${esc(c[1])}</text>`;
+    if(txt){const t=cut(txt,44);const ls=[];for(let k=0;k<t.length;k+=16)ls.push(t.slice(k,k+16));ls.slice(0,3).forEach((l,k)=>{s+=`<text x="${x+10}" y="${top?yEnd+22+k*13:yEnd-40+k*13}" fill="#1b2a41">${esc(l)}</text>`});}
+    else s+=`<text x="${x+10}" y="${top?yEnd+22:yEnd-28}" fill="#a3aebb">（未填）</text>`;});
+  return s+'</svg>';
+}
+
+/* ---------------- 透明規則引擎（非 LLM） ---------------- */
+const Engine={
+  name:'透明規則引擎 v1.0（Rule-based，非 LLM）',version:'1.0.0',adapter:null,
+  registerAIAdapter(a){if(!a||typeof a.analyze!=='function')throw new Error('adapter 需提供 analyze(payload) 函式');this.adapter=a;},
+  async diagnose(stageId,data,S){
+    const t0=performance.now();const base=RULES[stageId](data,S);
+    base.engine=this.name;base.generatedAt=new Date().toISOString();base.rulesFired=[...new Set([...base.assessment,...base.hypotheses,...base.recommendations,...base.nextActions].map(x=>x.rule))];
+    base.ms=Math.round(performance.now()-t0);
+    if(this.adapter){try{const extra=await this.adapter.analyze({stageId,data,context:S.all(),ruleResult:JSON.parse(JSON.stringify(base))});base.aiExtra={name:this.adapter.name||'External AI Adapter',text:String(extra&&extra.text||extra||'')};}catch(e){base.aiExtra={name:this.adapter.name||'External AI Adapter',error:String(e.message||e)};}}
+    return base;
+  }
+};
+
+/* ---------------- 狀態 ---------------- */
+const N_STAGES=STAGES.length;
+let STATE={stages:{},view:'home',updatedAt:null};
+const S={d:id=>(STATE.stages[id]&&STATE.stages[id].confirmed)?STATE.stages[id].data:null,all:()=>Object.fromEntries(STAGES.map(s=>[s.id,S.d(s.id)]))};
+const stage=id=>STAGES.find(s=>s.id===+id);
+const rec=id=>STATE.stages[id]||{};
+/* 修正：須「所有」前面階段皆已確認才解鎖（原版只檢查前一階段，返回修改後下游仍可進入） */
+const unlocked=id=>STAGES.every(s=>s.id>=+id||!!rec(s.id).confirmed);
+const statusOf=id=>!unlocked(id)?'locked':rec(id).confirmed?'done':rec(id).draft?'draft':'open';
+const isDone=id=>statusOf(id)==='done';
+const doneCount=()=>STAGES.filter(s=>isDone(s.id)).length;
+/* 前面階段在本階段確認之後又重新確認 → 本階段診斷依據舊資料（回傳那些階段 id） */
+const staleBy=id=>{const r=rec(id);if(!r.confirmed)return[];return STAGES.filter(s=>s.id<+id&&rec(s.id).confirmedAt>r.confirmedAt).map(s=>s.id);};
+/* dep 欄位：d[f.dep]===(f.depVal||'是') 才顯示；f.depReq 表示顯示時必填 */
+const visibleOf=(f,d)=>!f.dep||d[f.dep]===(f.depVal||'是');
+const requiredOf=f=>!!(f.req||(f.dep&&f.depReq));
+let CURRENT_CARRY=[];let saveTimer=null;
+
+function load(){try{const raw=localStorage.getItem(APP.storageKey);if(raw){const o=JSON.parse(raw);if(o&&o.stages)STATE=o;}}catch(e){console.warn('localStorage 讀取失敗',e);}}
+function save(){STATE.updatedAt=new Date().toISOString();try{localStorage.setItem(APP.storageKey,JSON.stringify(STATE));}catch(e){console.warn('localStorage 寫入失敗',e);toast('無法儲存至瀏覽器（儲存空間或隱私模式限制）',true);}}
+function toast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='toast',2600);}
+function modal(html){const m=document.getElementById('modal');document.getElementById('modalBody').innerHTML=html;m.classList.add('show');}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+function toggleSidebar(open){const sb=document.getElementById('sidebar'),ov=document.getElementById('sbOverlay');const o=open==null?!sb.classList.contains('open'):open;sb.classList.toggle('open',o);ov.classList.toggle('show',o);}
+document.getElementById('menuBtn').onclick=()=>toggleSidebar();
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+function renderBrand(){document.title=`${APP.platform}｜${APP.topic}`;document.getElementById('brandText').innerHTML=`${esc(APP.platform)}<span class="sub">${esc(APP.brandSub)}</span>`;document.getElementById('topReport').textContent=UI.reportName;}
+
+/* ---------------- 路由 ---------------- */
+function go(v,tab){if(location.hash.slice(1)===v){route(tab);}else{location.hash=v;if(tab)window._pendingTab=tab;}toggleSidebar(false);window.scrollTo({top:0});}
+window.addEventListener('hashchange',()=>route(window._pendingTab));
+function route(tab){const v=location.hash.slice(1)||STATE.view||'home';window._pendingTab=null;STATE.view=v;
+  if(v==='home')renderHome();else if(v==='report')renderReport();else if(/^stage-\d+$/.test(v)&&stage(v.split('-')[1]))renderStage(+v.split('-')[1],tab);else renderHome();
+  renderSidebar();renderProgress();}
+function renderProgress(){const n=doneCount();document.getElementById('progText').textContent=`${n} / ${N_STAGES} 階段`;document.getElementById('progBar').style.width=(n/N_STAGES*100)+'%';}
+function lockedMsg(id){const m=STAGES.find(s=>s.id<id&&!rec(s.id).confirmed);return`請先完成第 ${m?m.id:id-1} 階段並確認診斷`;}
+
+/* ---------------- 側欄 ---------------- */
+function renderSidebar(){const v=STATE.view;const sb=document.getElementById('sidebar');
+  const stLabel={locked:'鎖定',open:'可開始',draft:'草稿中',done:'已確認'};
+  sb.innerHTML=`<div class="sb-home ${v==='home'?'active':''}" onclick="go('home')">${esc(THEME.labels.home)}</div><div class="sb-sep"></div><div class="sb-title">${esc(APP.flowName)}</div>
+  ${STAGES.map(s=>{const st=statusOf(s.id);const lbl=st==='done'&&staleBy(s.id).length?'已確認（需更新）':stLabel[st];return`<div class="step ${st} ${v==='stage-'+s.id?'active':''} ${st==='done'?'done':st==='draft'||st==='open'?'current':''}" onclick="${st==='locked'?`toast('${lockedMsg(s.id)}',true)`:`go('stage-${s.id}')`}"><div class="num">${st==='done'?'✓':st==='locked'?'🔒':s.id}</div><div><div class="lbl">${s.title}</div><span class="en">${s.en}</span><span class="st">${lbl}</span></div></div>`}).join('')}
+  <div class="sb-sep"></div><div class="sb-home ${v==='report'?'active':''}" onclick="go('report')">📄 ${esc(UI.reportName)}（${doneCount()}/${N_STAGES}）</div>
+  <div class="sb-sep"></div><div class="tiny muted" style="padding:0 10px">進度自動儲存於此瀏覽器（localStorage）。<br>最後儲存：${STATE.updatedAt?new Date(STATE.updatedAt).toLocaleString('zh-TW'):'－'}</div>
+  <div class="btn-row mt8" style="padding:0 6px"><button class="btn sm" onclick="exportJSON()">匯出進度</button><button class="btn sm" onclick="importJSON()">匯入進度</button><button class="btn sm danger ghost" onclick="confirmReset()">重置</button></div>`;}
+
+/* ---------------- 首頁（主視覺版面；頂條裝飾與 hero 圖由 THEME 決定） ---------------- */
+function renderHome(){const n=doneCount(),all=n===N_STAGES;const nx=STAGES.find(s=>!isDone(s.id));const next=(nx||STAGES[N_STAGES-1]).id;
+  const art=HERO_IMG?`<img src="${HERO_IMG}" alt="${esc(APP.platform)} 插圖">`:typeof homeSketch==='function'?homeSketch():typeof THEME.hero==='function'?THEME.hero():'';
+  const stTxt={done:'已確認',locked:'鎖定',draft:'草稿',open:'可開始'},stCls={done:'g',locked:'ex',draft:'y',open:'in'};
+  const tileGo=s=>statusOf(s.id)==='locked'?`toast('${lockedMsg(s.id)}',true)`:`go('stage-${s.id}')`;
+  document.getElementById('view').innerHTML=`
+  <section class="slate"><div class="slate-clap" aria-hidden="true"></div><div class="slate-body"><div>
+    <div class="eyebrow">${esc(APP.eyebrow)}</div><h1>${esc(APP.platform)}</h1><p class="lead">${CASE.heroLead}</p>
+    <div class="slate-grid"><div><b>${esc(THEME.labels.slate[0])}</b><span>${esc(UI.slate.prod)}</span></div><div><b>${esc(THEME.labels.slate[1])}</b><span>${N_STAGES} 階段</span></div><div><b>${esc(THEME.labels.slate[2])}</b><span>${n} / ${N_STAGES}</span></div><div><b>${esc(THEME.labels.slate[3])}</b><span>${esc(UI.slate.roll)}</span></div></div>
+    <div class="btn-row">${all?`<button class="btn primary lg" onclick="go('report')">全部完成：查看${esc(UI.reportName)}</button>`:`<button class="btn primary lg" onclick="go('stage-${next}')">${n?`繼續第 ${next} 階段`:'開始第 1 階段'}</button><button class="btn lg" onclick="go('report')">查看${esc(UI.reportName)}</button>`}<button class="btn ghost" onclick="introOpen(0)">▶ 重播開場說明</button></div></div>
+    <figure class="slate-art">${art}<figcaption>${esc(UI.slate.tagline)}</figcaption></figure></div></section>
+  <div class="card"><div class="card-h"><h2>${esc(APP.flowName)}</h2><span class="pill">${n}/${N_STAGES} 已確認</span></div>
+    <div class="reel" style="--n:${N_STAGES}"><div class="stage-tiles">${STAGES.map(s=>{const st=statusOf(s.id);return`<div class="tile ${st==='locked'?'locked':''} ${nx&&nx.id===s.id?'now':''}" onclick="${tileGo(s)}"><div class="n">${esc(THEME.labels.tile)} ${String(s.id).padStart(2,'0')}</div><b>${s.title}</b><span>${s.en}</span><span class="st badge ${stCls[st]}">${stTxt[st]}</span></div>`}).join('')}</div></div>
+    <p class="tiny muted mt8">${esc(THEME.labels.reelNote)}</p></div>
+  <div class="grid g2"><div class="card"><div class="card-h"><h2>參考範例人物</h2><span class="badge ex">${esc(UI.caseBadge)}</span></div>
+    <div class="profile"><div><div class="avatar-wrap">${AVATAR_SVG}<i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i></div></div>
+    <div><h3 style="font-size:21px;margin-bottom:2px">${CASE.name}</h3><div class="small muted">${CASE.title}｜${CASE.system}</div><div class="small mt8">${CASE.intro}</div>
+      <dl class="meta">${CASE.meta.map(m=>`<dt>${m[0]}</dt><dd>${m[1]}</dd>`).join('')}<dt>核心邏輯</dt><dd><b>${CASE.logic}</b></dd></dl></div></div></div>
+    <div class="card"><div class="card-h"><h2>${esc(UI.pains.title)}</h2><span class="badge r">${esc(UI.pains.badge)}</span></div><div class="grid" style="gap:10px">${CASE.pains.map((p,i)=>`<div class="pain"><div class="ic">${esc(THEME.labels.pain)}${i+1}</div><div><b>${p[0]}</b><span>${p[1]}</span></div></div>`).join('')}</div><p class="tiny muted mt8">${UI.pains.note}</p></div></div>
+  <div class="card"><div class="card-h"><h2>${esc(UI.outcomes.title)}</h2><span class="badge in">${esc(UI.outcomes.badge)}</span></div>
+    <div class="grid g3" style="gap:10px">${CASE.outcomes.map((o,i)=>`<div class="kpi ${'rygbyr'[i]||'b'}"><div class="v">${o[0]}</div><div class="l">${o[1]}</div></div>`).join('')}</div><p class="small muted mt12">${CASE.outcomeNote}</p>
+    <hr class="sep"><h3>${esc(UI.outcomes.visionTitle)}</h3><div class="grid g3" style="gap:10px">${CASE.visionItems.map((v,i)=>`<div class="pain" style="border-style:solid"><div class="ic" style="border-color:var(--green);color:var(--green)">${i+1}</div><div><b>${v[0]}</b><span>${v[1]}</span></div></div>`).join('')}</div></div>
+  <div class="card"><div class="card-h"><h2>使用說明</h2><span class="engine-tag"><i></i>${Engine.name}</span></div><div class="grid g2"><div><ol class="steps">${UI.usage.map(u=>`<li>${u}</li>`).join('')}</ol></div>
+    <div><h4>內容標示</h4><div class="legend"><div class="it"><span class="badge ex">範例</span>參考範例，供對照</div><div class="it"><span class="badge in">你的資料</span>你填寫並確認的內容</div><div class="it"><span class="badge dx">診斷推論</span>規則依你的輸入推導</div><div class="it"><span class="badge hy">待驗證假設</span>證據不足，實際試過才知道</div></div>
+    <div class="note gray mt12"><b>關於診斷：</b>這裡沒有串接 AI 聊天機器人。所有結論都由固定規則產生，每條附規則編號，看得到是哪一條規則、根據哪一格資料。</div>
+    ${UI.sendNote?`<div class="note warn mt12"><b>寄出前確認：</b>${UI.sendNote}</div>`:''}</div></div></div>`;
+  fxEnter('home');}
+
+/* ---------------- 階段頁 ---------------- */
+function renderStage(id,tab){const st=stage(id);if(!st)return renderHome();const r=rec(id);
+  if(!unlocked(id)){const m=STAGES.find(s=>s.id<id&&!rec(s.id).confirmed);document.getElementById('view').innerHTML=`<div class="card lock-screen"><div class="ic">🔒</div><h2>第 ${id} 階段尚未解鎖</h2><p class="muted">請先完成第 ${m.id} 階段「${m.title}」並按「確認診斷」。</p><button class="btn primary" onclick="go('stage-${m.id}')">前往第 ${m.id} 階段</button></div>`;return;}
+  tab=tab||(r.confirmed?'dx':r.draft?'input':'method');
+  const st_=statusOf(id);const stale=staleBy(id);
+  const extras=EXTRA_TABS.filter(x=>x.stage===id);
+  const tabs=[['method','方法說明'],['guide','操作指引'],['demo','參考範例'],['input','填寫資料'],['dx','診斷結果'],...extras.map(x=>[x.key,x.label])];
+  document.getElementById('view').innerHTML=`
+  <div class="stage-hero"><div class="big">${id}</div><div style="flex:1"><div class="flex sb"><div><h1>${st.title}</h1><div class="en">STAGE ${id} ｜ ${st.en}</div></div><span class="badge ${st_==='done'?'g':'in'}">${st_==='done'?'已確認 '+new Date(r.confirmedAt).toLocaleString('zh-TW'):st_==='draft'?'草稿中':'可開始'}</span></div><div class="goal"><b>階段目標：</b>${st.goal}</div>
+  ${stale.length?`<div class="note warn mt8"><b>前階段資料已更新：</b>第 ${stale.join('、')} 階段在本階段確認後重新確認過，本階段的帶入資料與診斷可能過期。建議按「返回修改」並重新確認診斷。</div>`:''}</div></div>
+  <div class="tabs">${tabs.map(t=>`<div class="tab ${tab===t[0]?'active':''} ${(t[0]==='dx'&&r.dx)||(t[0]==='input'&&r.draft)?'has':''}" onclick="renderStage(${id},'${t[0]}')"><span class="dot"></span>${t[1]}</div>`).join('')}</div>
+  <div class="tabpanel ${tab==='method'?'active':''}">${methodHTML(st)}</div>
+  <div class="tabpanel ${tab==='guide'?'active':''}">${guideHTML(st)}</div>
+  <div class="tabpanel ${tab==='demo'?'active':''}">${demoHTML(st)}</div>
+  <div class="tabpanel ${tab==='input'?'active':''}" id="inputPanel">${inputHTML(st)}</div>
+  <div class="tabpanel ${tab==='dx'?'active':''}">${r.dx?dxHTML(st,r.dx,r):`<div class="card lock-screen"><div class="ic">🧭</div><h3>尚未產生診斷</h3><p class="muted">請於「填寫資料」完成必填欄位並按「確認診斷」。</p><button class="btn primary" onclick="renderStage(${id},'input')">前往填寫資料</button></div>`}</div>
+  ${extras.map(x=>`<div class="tabpanel ${tab===x.key?'active':''}">${x.html()}</div>`).join('')}`;
+  if(tab==='input')bindForm(st);const ex=extras.find(x=>x.key===tab);if(ex&&ex.run)ex.run();
+  window.scrollTo({top:0});
+  fxEnter('stage-'+id+'-'+tab,_fxKey.indexOf('stage-'+id+'-')===0?'#view .tabpanel.active > *':null);setTimeout(fxAnnotate,420);}
+
+function methodHTML(st){const m=st.method;return`<div class="card"><div class="card-h"><h2>方法說明</h2><span class="pill">${st.en}</span></div><p>${m.intro}</p><div class="grid g2 mt12">${m.points.map(p=>`<div class="kpi" style="border-left:4px solid var(--teal)"><b style="color:var(--navy)">${p[0]}</b><div class="small muted mt8" style="line-height:1.6">${p[1]}</div></div>`).join('')}</div><h4 class="mt16">使用工具</h4><div class="flex">${m.tools.map(t=>`<span class="pill" title="${t[1]}"><b>${t[0]}</b>｜${t[1]}</span>`).join('')}</div><div class="note mt12"><b>本階段交付物：</b>${m.deliverable}</div><div class="btn-row mt12"><button class="btn primary" onclick="renderStage(${st.id},'guide')">下一步：操作指引 →</button></div></div>`;}
+function guideHTML(st){return`<div class="card"><div class="card-h"><h2>操作指引</h2></div><ol class="steps">${st.guide.map(g=>`<li>${g}</li>`).join('')}</ol><div class="legend mt16"><div class="it"><span class="badge ex">範例</span>參考範例資料</div><div class="it"><span class="badge in">你的資料</span>你填寫的資料</div><div class="it"><span class="badge dx">診斷推論</span>規則引擎輸出</div><div class="it"><span class="badge hy">待驗證假設</span>需驗證</div></div><div class="btn-row mt12"><button class="btn primary" onclick="renderStage(${st.id},'demo')">下一步：參考範例 →</button></div></div>`;}
+function demoHTML(st){return`<div class="card"><div class="card-h"><h2>參考範例</h2><span class="badge ex">範例</span></div><div class="note gray">${st.demo}</div>${renderData(st,st.example,'ex')}<div class="footer-actions">${APP.exampleFill?`<button class="btn teal" onclick="loadExample(${st.id})">載入範例至表單</button>`:''}<button class="btn primary" onclick="renderStage(${st.id},'input')">前往填寫資料 →</button></div></div>`;}
+
+/* 唯讀資料渲染（參考範例／報告共用） */
+const isEmptyVal=v=>v==null||v===''||(Array.isArray(v)&&!v.length)||(typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length);
+function renderData(st,d,badge){d=d||{};return st.sections.map(sec=>{const fs=sec.fields.filter(f=>visibleOf(f,d)&&!isEmptyVal(d[f.id]));if(!fs.length)return'';
+  return`<div class="form-section"><h3><span class="badge ${badge}">${badge==='ex'?'範例':'你的資料'}</span>${sec.title}</h3>${fs.map(f=>{const v=d[f.id];let body='';
+    if(f.type==='table')body=roTable(f,v);else if(f.type==='checks')body=`<div class="flex">${(v||[]).map(x=>`<span class="pill">${esc(x)}</span>`).join('')}</div>`;
+    else if(f.type==='likert')body=barRows(f.items.map(it=>({label:it[1],value:num(v[it[0]]),text:num(v[it[0]])+'/5'})),5);
+    else body=`<div style="white-space:pre-wrap">${esc(v)}</div>`;
+    return`<div class="field"><label class="lbl">${esc(f.label)}</label>${body}</div>`;}).join('')}</div>`;}).join('');}
+function roTable(f,rows){rows=(rows||[]).filter(r=>Object.values(r).some(x=>String(x??'').trim()));if(!rows.length)return'<span class="muted small">－</span>';
+  return`<div class="tbl-wrap"><table class="tbl compact"><thead><tr>${f.cols.map(c=>`<th>${c.l}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${f.cols.map(c=>`<td style="${c.t==='calc'?'font-weight:700;text-align:center':''}">${c.t==='calc'?c.calc(r):esc(r[c.k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;}
+
+/* ---------------- 表單 ---------------- */
+function inputHTML(st){const r=rec(st.id);const d=r.draft||{};CURRENT_CARRY=st.carry(S)||[];const nxt=stage(st.id+1);
+  const carry=CURRENT_CARRY.length?`<div class="carry"><h4>🔗 前階段帶入（已確認資料）</h4>${CURRENT_CARRY.map((b,bi)=>`<div class="mb8"><b class="small">${esc(b.title)}</b>${b.note?`<div class="tiny muted">${esc(b.note)}</div>`:''}<div class="chips mt8">${(b.chips||[]).map((c,ci)=>`<span class="chip" onclick="applyChip(${st.id},${bi},${ci})" title="點選帶入">＋ ${esc(c.label)}</span>`).join('')}${(b.static||[]).map(s=>`<span class="chip static">${esc(s)}</span>`).join('')}</div>${(b.chips||[]).length>1&&!b.chips.every(c=>c.replace&&c.field===b.chips[0].field)?`<button class="btn sm mt8" onclick="applyAll(${st.id},${bi})">全部帶入</button>`:''}</div>`).join('')}</div>`:'';
+  const banner=r.confirmed?`<div class="note ok"><b>本階段已確認。</b>表單為唯讀；如需修改請按「返回修改」，修改後需重新確認診斷，後續階段將暫時鎖定（資料保留）。 <button class="btn sm" onclick="reopen(${st.id})">返回修改</button></div>`:'';
+  const form=st.sections.map((sec,i)=>`<div class="form-section"><h3><span class="n">${i+1}</span>${sec.title}${sec.desc?`<span class="tiny muted">${sec.desc}</span>`:''}</h3>${sec.fields.map(f=>fieldHTML(st,f,d)).join('')}</div>`).join('');
+  return`<div class="card">${banner}${carry}<form id="stageForm" onsubmit="return false" ${r.confirmed?'class="ro"':''}>${form}</form><div id="formErrors"></div>
+  <div class="footer-actions">${r.confirmed?`<button class="btn" onclick="renderStage(${st.id},'dx')">查看診斷結果</button>${nxt?`<button class="btn primary" onclick="go('stage-${nxt.id}')">前往第 ${nxt.id} 階段 →</button>`:`<button class="btn primary" onclick="go('report')">前往${esc(UI.reportName)} →</button>`}`:
+  `${APP.exampleFill?`<button class="btn teal" onclick="loadExample(${st.id})">載入範例</button>`:''}<button class="btn" onclick="saveDraft(${st.id},true)">儲存草稿</button><button class="btn danger ghost" onclick="clearStage(${st.id})">清除本階段</button><span style="flex:1"></span><button class="btn primary lg" onclick="confirmStage(${st.id})">確認診斷 ✓</button>`}</div></div>`;}
+
+/* 範例以灰字提示呈現在欄位下方（APP.exampleFill 另外控制「載入範例」按鈕）；表格取前 2 列摘要 */
+function exHint(f,v){if(isEmptyVal(v)||f.type==='likert')return'';let t;
+  if(f.type==='checks')t=(v||[]).join('、');
+  else if(f.type==='table'){const rows=(v||[]).filter(r=>Object.values(r).some(x=>String(x??'').trim()));if(!rows.length)return'';
+    t=rows.slice(0,2).map(r=>f.cols.filter(c=>c.t!=='calc'&&String(r[c.k]??'').trim()).map(c=>`${c.l}：${cut(String(r[c.k]),18)}`).join('｜')).join('；')+(rows.length>2?`（範例共 ${rows.length} 列）`:'');}
+  else t=String(v);
+  return`<div class="ex"><b>範例：</b>${esc(t)}</div>`;}
+function fieldHTML(st,f,d){const v=d[f.id];const req=requiredOf(f)?'<span class="req">*</span>':'';
+  const exHtml=exHint(f,st.example[f.id]);
+  const help=f.help?`<div class="help">${f.help}</div>`:'';let c='';
+  switch(f.type){
+    case'text':c=`<input type="text" data-f="${f.id}" value="${esc(v??'')}" placeholder="${esc(f.ph||'')}">`;break;
+    case'number':c=`<input type="number" step="any" data-f="${f.id}" value="${esc(v??'')}" placeholder="${esc(f.ph||'')}">`;break;
+    case'textarea':c=`<textarea data-f="${f.id}" placeholder="${esc(f.ph||'')}">${esc(v??'')}</textarea>`;break;
+    case'select':c=`<select data-f="${f.id}"><option value="">請選擇</option>${f.options.map(o=>`<option ${v===o?'selected':''}>${o}</option>`).join('')}</select>`;break;
+    case'checks':c=`<div class="chk-group">${f.options.map(o=>`<label class="chk ${(v||[]).includes(o)?'on':''}"><input type="checkbox" data-f="${f.id}" value="${esc(o)}" ${(v||[]).includes(o)?'checked':''}>${esc(o)}</label>`).join('')}</div>`;break;
+    case'likert':c=f.items.map(it=>`<div class="flex mb8" style="gap:12px"><span style="width:110px;font-size:13px;font-weight:600">${it[1]}</span><div class="likert" style="flex:1">${[1,2,3,4,5].map(n=>`<label class="${v&&+v[it[0]]===n?'on':''}"><input type="radio" name="lk_${f.id}_${it[0]}" value="${n}" ${v&&+v[it[0]]===n?'checked':''}>${n}</label>`).join('')}</div></div>`).join('');break;
+    case'table':c=tableHTML(f,v||[]);break;}
+  const hidden=visibleOf(f,d)?'':'style="display:none"';
+  return`<div class="field" id="fld_${f.id}" ${f.dep?`data-dep="${f.dep}" data-depval="${esc(f.depVal||'是')}"`:''} ${hidden}><label class="lbl">${esc(f.label)}${req}</label>${help}${c}${exHtml}<div class="err-msg" id="err_${f.id}"></div></div>`;}
+function tableHTML(f,rows){if(!rows.length)rows=[{}];return`<div class="tbl-wrap"><table class="tbl tbl-edit" data-tbl="${f.id}"><thead><tr>${f.cols.map(c=>`<th style="width:${c.w||'auto'}">${c.l}</th>`).join('')}<th style="width:34px"></th></tr></thead><tbody>${rows.map((r,i)=>rowHTML(f,r,i)).join('')}</tbody></table></div><div class="btn-row mt8 no-print"><button class="btn sm" onclick="addRow('${f.id}')">＋ 新增一列</button><span class="tiny muted">至少 ${f.min||1} 列有效資料</span></div>`;}
+function rowHTML(f,r,i){return`<tr data-row="${i}">${f.cols.map(c=>{const v=r[c.k]??'';
+  if(c.t==='calc')return`<td class="calc" data-calc="${c.k}">${c.calc(r)}</td>`;
+  if(c.t==='select')return`<td><select data-k="${c.k}"><option value="">－</option>${c.o.map(o=>`<option ${String(v)===o?'selected':''}>${o}</option>`).join('')}</select></td>`;
+  if(c.t==='number')return`<td><input type="number" step="any" data-k="${c.k}" value="${esc(v)}"></td>`;
+  if(c.t==='textarea')return`<td><textarea data-k="${c.k}" rows="2">${esc(v)}</textarea></td>`;
+  return`<td><input type="text" data-k="${c.k}" value="${esc(v)}"></td>`;}).join('')}<td><button type="button" class="rm" title="刪除此列" onclick="rmRow('${f.id}',${i})">✕</button></td></tr>`;}
+
+function collect(st){const d={};st.sections.forEach(sec=>sec.fields.forEach(f=>{const el=document.getElementById('fld_'+f.id);if(!el)return;
+  if(f.type==='table'){const rows=[];el.querySelectorAll('tbody tr').forEach(tr=>{const r={};tr.querySelectorAll('[data-k]').forEach(inp=>r[inp.dataset.k]=inp.value);rows.push(r);});d[f.id]=rows;}
+  else if(f.type==='checks')d[f.id]=[...el.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value);
+  else if(f.type==='likert'){const o={};f.items.forEach(it=>{const c=el.querySelector(`input[name="lk_${f.id}_${it[0]}"]:checked`);if(c)o[it[0]]=+c.value;});d[f.id]=o;}
+  else{const inp=el.querySelector('[data-f]');d[f.id]=inp?inp.value:'';}}));return d;}
+function bindForm(st){const form=document.getElementById('stageForm');if(!form)return;const r=rec(st.id);
+  if(r.confirmed){form.querySelectorAll('input,select,textarea,button').forEach(e=>e.disabled=true);return;}
+  const h=e=>{const t=e.target;
+    if(t.closest('.chk'))t.closest('.chk').classList.toggle('on',t.checked);
+    if(t.type==='radio'&&t.closest('.likert'))t.closest('.likert').querySelectorAll('label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));
+    const tr=t.closest('tr');if(tr){const tbl=t.closest('table');const f=findField(st,tbl.dataset.tbl);const row={};tr.querySelectorAll('[data-k]').forEach(i=>row[i.dataset.k]=i.value);tr.querySelectorAll('[data-calc]').forEach(td=>{const c=f.cols.find(x=>x.k===td.dataset.calc);td.textContent=c.calc(row);});}
+    if(t.dataset.f){document.querySelectorAll(`[data-dep="${t.dataset.f}"]`).forEach(el=>el.style.display=t.value===el.dataset.depval?'':'none');}
+    const fld=t.closest('.field');if(fld)fld.classList.remove('invalid');
+    clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveDraft(st.id,false),500);};
+  form.addEventListener('input',h);form.addEventListener('change',h);}
+function findField(st,id){for(const s of st.sections)for(const f of s.fields)if(f.id===id)return f;return null;}
+function saveDraft(id,notify){const st=stage(id);const form=document.getElementById('stageForm');if(!form)return;const d=collect(st);STATE.stages[id]={...rec(id),draft:d};save();if(notify){toast('草稿已儲存');renderSidebar();}}
+function refreshField(st,fid,d){const f=findField(st,fid);const el=document.getElementById('fld_'+fid);if(!el)return;const tmp=document.createElement('div');tmp.innerHTML=fieldHTML(st,f,d);el.replaceWith(tmp.firstElementChild);}
+function addRow(fid){const st=stage(STATE.view.split('-')[1]);const d=collect(st);(d[fid]=d[fid]||[]).push({});refreshField(st,fid,d);saveDraft(st.id,false);}
+function rmRow(fid,i){const st=stage(STATE.view.split('-')[1]);const d=collect(st);d[fid].splice(i,1);refreshField(st,fid,d);saveDraft(st.id,false);}
+function loadExample(id){const st=stage(id);if(rec(id).confirmed){toast('本階段已確認，請先「返回修改」',true);return;}
+  const d=JSON.parse(JSON.stringify(st.example));STATE.stages[id]={...rec(id),draft:d};save();renderStage(id,'input');toast('已載入範例資料（標示為範例，請依需求修改）');}
+function clearStage(id){modal(`<h3>清除第 ${id} 階段資料？</h3><p class="muted">將刪除本階段草稿與診斷結果；後續階段資料保留但將鎖定。</p><div class="btn-row"><button class="btn danger" onclick="doClear(${id})">確認清除</button><button class="btn" onclick="closeModal()">取消</button></div>`);}
+function doClear(id){delete STATE.stages[id];save();closeModal();renderStage(id,'input');renderSidebar();renderProgress();toast('已清除');}
+function reopen(id){STATE.stages[id]={...rec(id),confirmed:false};save();renderSidebar();renderProgress();renderStage(id,'input');toast('已開放修改；完成後請重新確認診斷');}
+/* 帶入規則：表格欄位 → 新增一列（深拷貝）；文字欄位 → 空白或 replace 時取代，否則換行附加 */
+function mergeChip(st,d,c){const f=findField(st,c.field);
+  if(f.type==='table'){const rows=(d[c.field]||[]).filter(r=>Object.values(r).some(x=>String(x??'').trim()));
+    const same=r=>Object.keys(c.value).every(k=>String(r[k]??'').trim()===String(c.value[k]??'').trim()); // skip rows already carried in
+    if(!rows.some(same))rows.push(JSON.parse(JSON.stringify(c.value)));d[c.field]=rows;}
+  else{const cur=String(d[c.field]||'').trim();d[c.field]=c.replace||!cur?c.value:cur.includes(String(c.value).trim())?cur:cur+'\n'+c.value;}}
+function applyChip(id,bi,ci){const st=stage(id);if(rec(id).confirmed)return toast('本階段已確認，請先「返回修改」',true);const c=CURRENT_CARRY[bi].chips[ci];const d=collect(st);
+  mergeChip(st,d,c);refreshField(st,c.field,d);saveDraft(id,false);toast('已帶入');}
+function applyAll(id,bi){const st=stage(id);if(rec(id).confirmed)return toast('本階段已確認，請先「返回修改」',true);const b=CURRENT_CARRY[bi];const d=collect(st);
+  const seen=new Set(),use=b.chips.filter(c=>!c.replace||(!seen.has(c.field)&&seen.add(c.field))); // first replace chip per field wins
+  use.forEach(c=>mergeChip(st,d,c));[...new Set(use.map(c=>c.field))].forEach(fid=>refreshField(st,fid,d));saveDraft(id,false);toast(`已帶入 ${use.length} 筆`);}
+
+/* ---------------- 驗證 ---------------- */
+function validate(st,d){const errs=[];st.sections.forEach(sec=>sec.fields.forEach(f=>{if(!visibleOf(f,d))return;const req=requiredOf(f);const v=d[f.id];let msg='';
+  if(f.type==='table'){const rows=(v||[]).filter(r=>String(r[f.cols[0].k]??'').trim());if(req&&rows.length<(f.min||1))msg=`至少需填寫 ${f.min||1} 列有效資料（目前 ${rows.length} 列；第一欄為必填）`;
+    else{const bad=[];rows.forEach((r,i)=>f.cols.forEach(c=>{if((c.t==='select'||c.t==='number')&&String(r[c.k]??'').trim()==='')bad.push(`第 ${i+1} 列「${c.l}」`);}));if(bad.length)msg='請完成：'+bad.slice(0,4).join('、')+(bad.length>4?` 等 ${bad.length} 處`:'');}}
+  else if(f.type==='checks'){if(req&&(v||[]).length<(f.min||1))msg=`至少選擇 ${f.min||1} 項`;}
+  else if(f.type==='likert'){const miss=f.items.filter(it=>!(v&&v[it[0]]));if(req&&miss.length)msg='請完成評分：'+miss.map(m=>m[1]).join('、');}
+  else if(req&&String(v??'').trim()==='')msg='此欄位為必填';
+  if(msg)errs.push({id:f.id,msg});}));
+  if(st.validate)errs.push(...st.validate(d).map(m=>({id:null,msg:m})));return errs;}
+
+async function confirmStage(id){const st=stage(id);const d=collect(st);const errs=validate(st,d);
+  document.querySelectorAll('.field.invalid').forEach(e=>e.classList.remove('invalid'));
+  document.querySelectorAll('.err-msg').forEach(e=>e.textContent='');
+  errs.forEach(e=>{if(e.id){const el=document.getElementById('fld_'+e.id);el.classList.add('invalid');document.getElementById('err_'+e.id).textContent=e.msg;}});
+  const box=document.getElementById('formErrors');
+  if(errs.length){box.innerHTML=`<div class="note err"><b>尚有 ${errs.length} 處待修正：</b><ul class="clean small">${errs.map(e=>`<li>${e.id?esc(findField(st,e.id).label)+'：':''}${esc(e.msg)}</li>`).join('')}</ul></div>`;const first=errs.find(e=>e.id);if(first)document.getElementById('fld_'+first.id).scrollIntoView({behavior:'smooth',block:'center'});toast(`尚有 ${errs.length} 處待修正`,true);return;}
+  box.innerHTML='';
+  st.sections.forEach(sec=>sec.fields.forEach(f=>{if(f.type==='table')d[f.id]=(d[f.id]||[]).filter(r=>String(r[f.cols[0].k]??'').trim());if(f.type==='number'&&d[f.id]!=='')d[f.id]=+d[f.id];}));
+  const dx=await Engine.diagnose(id,d,S);
+  STATE.stages[id]={draft:d,data:d,dx,confirmed:true,confirmedAt:new Date().toISOString()};save();renderSidebar();renderProgress();renderStage(id,'dx');fxConfetti(id===N_STAGES||doneCount()===N_STAGES);
+  const nxt=stage(id+1);toast(nxt?(unlocked(nxt.id)?`第 ${id} 階段診斷完成，第 ${nxt.id} 階段已解鎖`:`第 ${id} 階段診斷完成`):`${APP.flowName}全部完成！可前往${UI.reportName}`);}
+
+/* ---------------- 診斷結果 ---------------- */
+function dxHTML(st,dx,r){const sc=dx.score;const col=sc>=75?'var(--green)':sc>=50?'var(--yellow)':'var(--red)';const nxt=stage(st.id+1);
+  const item=x=>`<div class="dx-item"><span class="sev ${x.sev||'i'}"></span><div style="flex:1">${esc(x.text)}${x.verify?`<div class="tiny muted mt8">驗證方式：${esc(x.verify)}</div>`:''}</div><span class="rule" title="規則編號（可追溯）">${x.rule}</span></div>`;
+  return`<div class="card"><div class="card-h"><h2>診斷結果</h2><div class="flex"><span class="badge dx">診斷推論</span><span class="engine-tag"><i></i>${esc(dx.engine||Engine.name)}｜${(dx.rulesFired||[]).length} 條規則觸發｜${dx.ms||0} ms</span></div></div>
+  <div class="dx-head"><div class="score-ring"><div class="ring" style="background:conic-gradient(${col} ${sc*3.6}deg,var(--line) 0)"><b>${sc}</b></div><div><div class="small muted">${dx.scoreLabel}</div><div style="font-size:18px;font-weight:800;color:${col}">${dx.scoreKind==='state'?(sc>=75?'現況穩健':sc>=50?'現況有明顯缺口':'現況急需改善'):(sc>=75?'良好':sc>=50?'尚可，需補強':'不足，需重做')}</div><div class="tiny muted">${dx.scoreKind==='state'?'評估目前現況（分數越低，越需要優先改善）':'評估本階段資料的完整度與一致性'}；依規則扣分計算，非 LLM 評分</div></div></div>
+  <div class="grid g4" style="gap:10px">${dx.metrics.map(m=>`<div class="kpi ${m.cls||''}"><div class="v" style="font-size:20px">${esc(m.value)}</div><div class="l">${esc(m.label)}</div></div>`).join('')}</div></div>
+  <div class="grid g2 mt16"><div class="dx-block"><h3><span class="badge dx">診斷推論</span>問題評估</h3>${dx.assessment.map(item).join('')||'<span class="muted small">無</span>'}</div>
+  <div class="dx-block" style="border-color:#f3d9a4;background:#fffcf5"><h3><span class="badge hy">待驗證假設</span>根因假設</h3>${dx.hypotheses.map(item).join('')||'<span class="muted small">本階段未產生需驗證之假設。</span>'}</div>
+  <div class="dx-block"><h3><span class="badge dx">診斷推論</span>改善建議</h3>${dx.recommendations.map(item).join('')||'<span class="muted small">無額外建議，請依方法說明持續精進。</span>'}</div>
+  <div class="dx-block"><h3><span class="badge dx">診斷推論</span>下一步行動</h3>${dx.nextActions.map(item).join('')}</div></div>
+  <div class="dx-block"><h3><span class="badge dx">視覺化分析</span></h3>${dx.visual||''}</div>
+  ${dx.aiExtra?`<div class="dx-block" style="border-color:#c7d7ff"><h3><span class="badge in">外部 AI 補充</span>${esc(dx.aiExtra.name)}</h3><div class="small" style="white-space:pre-wrap">${esc(dx.aiExtra.text||dx.aiExtra.error||'')}</div></div>`:''}
+  <div class="flex tiny muted"><span><span class="sev h" style="display:inline-block;width:8px;height:8px;border-radius:50%"></span> 高嚴重度</span><span><span class="sev m" style="display:inline-block;width:8px;height:8px;border-radius:50%"></span> 中</span><span><span class="sev l" style="display:inline-block;width:8px;height:8px;border-radius:50%"></span> 正向／低</span><span><span class="sev i" style="display:inline-block;width:8px;height:8px;border-radius:50%"></span> 資訊</span><span>產生時間：${new Date(dx.generatedAt||Date.now()).toLocaleString('zh-TW')}</span></div>
+  <div class="footer-actions"><button class="btn" onclick="renderStage(${st.id},'input')">檢視／修改輸入</button><button class="btn" onclick="reopen(${st.id})">返回修改</button><span style="flex:1"></span>${nxt?`<button class="btn primary lg" onclick="go('stage-${nxt.id}')">前往第 ${nxt.id} 階段：${nxt.title} →</button>`:`<button class="btn primary lg" onclick="go('report')">產生${esc(UI.reportName)} →</button>`}</div></div>`;}
+
+/* ---------------- 報告頁（由 REPORT 設定驅動） ---------------- */
+const DX_KEY_LABEL={assessment:'問題評估',hypotheses:'根因假設（待驗證）',recommendations:'改善建議',nextActions:'下一步行動'};
+function renderReport(){const n=doneCount();const all=n===N_STAGES;
+  const dx=id=>isDone(id)?rec(id).dx:null;const d=id=>(isDone(id)&&rec(id).data)||{};
+  const scores=STAGES.filter(s=>dx(s.id)).map(s=>dx(s.id).score);
+  const ctx={n,all,d,dx,avgScore:scores.length?Math.round(avg(scores)):0};
+  const sec=(t,body)=>`<div class="report-section"><h2>${t}</h2>${body}</div>`;
+  const miss=STAGES.filter(s=>!isDone(s.id));
+  const head=`<div class="no-print card tight flex sb"><div><b>${all?`${APP.flowName}已全部完成，報告已自動彙整。`:`已完成 ${n}/${N_STAGES} 階段，以下為部分彙整（完成後自動更新）。`}</b>${all?'':`<div class="tiny muted">尚未完成：${miss.map(s=>`第 ${s.id} 階段 ${s.title}`).join('、')}</div>`}</div><div class="btn-row"><button class="btn primary" onclick="savePDF()">⬇ 下載 PDF</button><button class="btn teal" onclick="sendPlan()">✉ 寄給${esc(MAIL.toLabel)}</button>${all?'':`<button class="btn" onclick="go('stage-${miss[0].id}')">繼續第 ${miss[0].id} 階段</button>`}</div></div>`;
+  const caseLines=REPORT.caseLines?REPORT.caseLines(ctx):[`案主：${CASE.name}｜${CASE.title}`]; // client-type: replaces CASE.system + case line
+  const coverLines=(REPORT.coverLines?REPORT.coverLines(ctx):[]).concat(caseLines,[`報告日期：${new Date().toLocaleDateString('zh-TW')}　·　完成階段：${n}/${N_STAGES}　·　診斷引擎：${Engine.name}`]);
+  const cover=`<div class="report-cover"><div class="tiny" style="opacity:.8;letter-spacing:2px">${esc(REPORT.eyebrow)}</div><h1>${esc(REPORT.title)}</h1><div class="sub">${esc(REPORT.subtitle(ctx))}</div>${REPORT.caseLines?'':`<div class="sub mt8">${CASE.system}</div>`}${coverLines.map(l=>`<div class="sub">${esc(l)}</div>`).join('')}</div>`;
+  const dxList=(id,keys)=>{const x=dx(id);if(!x)return'';return keys.map(k=>x[k].length?`<h4 class="mt8">${DX_KEY_LABEL[k]}</h4><ul class="clean small">${x[k].map(i=>`<li>${esc(i.text)} <span class="rule tiny muted">[${i.rule}]</span>${i.verify?`<div class="tiny muted">驗證：${esc(i.verify)}</div>`:''}</li>`).join('')}</ul>`:'').join('');};
+  const stHead=id=>{const x=dx(id);return x?`<div class="flex sb mb8"><span class="badge dx">${x.scoreLabel}：${x.score}／100</span><span class="tiny muted">${(x.rulesFired||[]).length} 條規則</span></div>`:'';};
+  const summary=sec('一、執行摘要（Executive Summary）',REPORT.summary(ctx)+`<div class="legend mt12"><div class="it"><span class="badge in">你的資料</span>你確認的資料</div><div class="it"><span class="badge dx">診斷推論</span>規則引擎</div><div class="it"><span class="badge hy">待驗證假設</span>需驗證</div></div>`);
+  const body=REPORT.sections.map((g,gi)=>sec(g.title,g.stages.map((id,k)=>{const st=stage(id);const x=dx(id);
+    return`<h3 class="${k?'mt16':''}">${g.stages.length>1?`${gi+2}.${k+1} `:''}${esc(st.title)} <span class="badge in">你的資料</span></h3>${stHead(id)}${x?renderData(st,d(id),'in')+(x.visual||'')+dxList(id,g.keys||['assessment','hypotheses','recommendations']):'<span class="muted small">（未完成）</span>'}`;}).join('')));
+  const actions=sec('優先行動清單（各階段彙整）',`<ol class="steps">${STAGES.filter(s=>dx(s.id)).flatMap(s=>dx(s.id).nextActions.map(a=>`<li><b>第 ${s.id} 階段</b>｜${esc(a.text)} <span class="tiny muted">[${a.rule}]</span></li>`)).join('')||'<li class="muted">（尚無）</li>'}</ol>`);
+  const appendix=sec('附錄：待驗證假設總表與規則追溯',`<p class="small muted">以下假設由規則引擎依你填寫的資料推導，證據不足，需再查證、請教專業人士或實際試行後確認；每條附規則編號以供追溯。</p><div class="tbl-wrap"><table class="tbl compact"><tr><th>階段</th><th>假設</th><th>驗證方式</th><th>規則</th></tr>${STAGES.filter(s=>dx(s.id)).flatMap(s=>dx(s.id).hypotheses.map(h=>`<tr><td>${s.id}</td><td><span class="badge hy">待驗證</span> ${esc(h.text)}</td><td>${esc(h.verify||'')}</td><td class="mono tiny">${h.rule}</td></tr>`)).join('')||'<tr><td colspan="4" class="muted">（尚無）</td></tr>'}</table></div><p class="tiny muted mt12">本報告由 ${Engine.name} 產生，未使用大型語言模型；所有「診斷推論」皆可追溯至規則編號與你填寫的資料。報告產生時間：${new Date().toLocaleString('zh-TW')}</p>`);
+  document.getElementById('view').innerHTML=head+'<div id="reportDoc">'+cover+summary+body.map(b=>'<div class="page-break"></div>'+b).join('')+'<div class="page-break"></div>'+actions+appendix+'</div>'+`<div class="no-print btn-row mt16"><button class="btn primary" onclick="savePDF()">⬇ 下載 PDF</button><button class="btn teal" onclick="sendPlan()">✉ 寄給${esc(MAIL.toLabel)}</button><button class="btn" onclick="go('home')">回首頁</button></div>`;
+  fxEnter('report');}
+
+/* ---------------- 重置 / 匯出匯入 ---------------- */
+function confirmReset(){modal(`<h3>重置全部進度？</h3><p class="muted">將清除${esc(APP.flowName)}所有輸入與診斷（localStorage）。此動作無法復原，建議先「匯出進度」備份。</p><div class="btn-row"><button class="btn danger" onclick="doReset()">確認重置</button><button class="btn" onclick="exportJSON()">先匯出備份</button><button class="btn" onclick="closeModal()">取消</button></div>`);}
+function doReset(){STATE={stages:{},view:'home',updatedAt:null};try{localStorage.removeItem(APP.storageKey);}catch(e){console.warn('localStorage 清除失敗',e);}closeModal();go('home');renderSidebar();renderProgress();toast('已重置');}
+function exportJSON(){const blob=new Blob([JSON.stringify(STATE,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${APP.exportPrefix}_${new Date().toLocaleDateString('sv-SE')}.json`; /* sv-SE = local YYYY-MM-DD */a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function importJSON(){const i=document.createElement('input');i.type='file';i.accept='application/json';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!o||typeof o.stages!=='object')throw new Error('格式不符');STATE=o;save();route();toast('進度已匯入');}catch(e){toast('匯入失敗：'+e.message,true);}};r.readAsText(f);};i.click();}
+
+/* ---------------- 擴充介面（未來串接地端 LLM） ---------------- */
+window.AITC={version:APP.version,engine:Engine,stages:STAGES,state:()=>STATE,
+  /** 註冊外部 AI 分析介接。adapter = { name:'Local LLM', analyze: async ({stageId,data,context,ruleResult}) => ({text:'...'}) }
+   *  - 規則引擎之判定不會被覆寫；外部分析僅以「外部 AI 補充」區塊呈現，並標示來源。
+   *  - 建議於地端 LLM 服務前加上去識別化與權限檢查。 */
+  registerAIAdapter:a=>Engine.registerAIAdapter(a),
+  unregisterAIAdapter:()=>{Engine.adapter=null;}};
+
+/* ---------------- 動效（GSAP／rough-notation／canvas-confetti；CDN 未載入或偏好減少動態時略過） ---------------- */
+let _fxKey='',_ann=[];
+const fxReduced=()=>typeof matchMedia==='function'&&!!matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fxEnter(key,sel){const same=key===_fxKey;_fxKey=key;if(same||typeof gsap==='undefined'||fxReduced())return;
+  try{gsap.from(sel||'#view > *',{y:14,opacity:0,duration:.35,stagger:.05,ease:'power2.out',clearProps:'transform,opacity'});}catch(e){console.warn('GSAP 進場動畫失敗',e);}}
+/* 截圖前把進行中的進場動畫跑到終點，避免 PDF 截到半透明內容 */
+function fxFinish(){if(typeof gsap==='undefined')return;
+  try{gsap.getTweensOf('#view, #view *').forEach(t=>t.progress(1));}catch(e){console.warn('結束進場動畫失敗',e);}}
+if(typeof addEventListener==='function')addEventListener('beforeprint',fxFinish);
+/* 讀 THEME 色票（CSS 變數）；Canvas、p5、rough.js、html2canvas 背景色這類不能直接用 var() 的地方取實際色碼 */
+function tok(name,fb){try{const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim();return v||fb;}catch(e){return fb;}}
+function fxAnnotate(){_ann.forEach(a=>{try{a.remove();}catch(e){console.warn('移除手繪標註失敗',e);}});_ann=[];
+  if(typeof RoughNotation==='undefined'||fxReduced())return;
+  try{const A=RoughNotation.annotate,h=document.querySelector('#view .stage-hero h1'),r=document.querySelector('#view .tabpanel.active .ring');
+    if(h)_ann.push(A(h,{type:'underline',color:tok('--red','#c8553d'),strokeWidth:2,padding:2,iterations:1}));
+    if(r)_ann.push(A(r,{type:'circle',color:tok('--yellow','#d9a23a'),strokeWidth:2,padding:6}));
+    _ann.forEach(a=>a.show());}catch(e){console.warn('rough-notation 標註失敗',e);}}
+function fxConfetti(big){if(typeof confetti!=='function'||fxReduced())return;
+  try{const colors=[['--red','#c8553d'],['--yellow','#d9a23a'],['--green','#4f7d5c'],['--blue','#2f5d73'],['--ink','#2b2622']].map(c=>tok(c[0],c[1]));
+    if(big){confetti({particleCount:160,spread:100,origin:{y:.6},colors});
+      setTimeout(()=>confetti({particleCount:90,angle:60,spread:70,origin:{x:0,y:.7},colors}),250);
+      setTimeout(()=>confetti({particleCount:90,angle:120,spread:70,origin:{x:1,y:.7},colors}),400);}
+    else confetti({particleCount:60,spread:60,origin:{y:.7},colors,scalar:.9});}catch(e){console.warn('confetti 失敗',e);}}
+
+/* ---------------- PDF（html2canvas 截圖 → jsPDF 分頁，A4 直式） ---------------- */
+let _pdfBusy=false;
+function pdfName(){const nm=String((S.d(1)||{}).name||'').replace(/[\\/:*?"<>|\s]/g,'');return`${UI.pdfPrefix}_${nm||'未填姓名'}_${new Date().toLocaleDateString('sv-SE')}.pdf`;}
+async function makePDF(){if(typeof html2canvas!=='function'||!window.jspdf)throw new Error('PDF 元件尚未載入（需要網路）');
+  const docEl=document.getElementById('reportDoc');if(!docEl)throw new Error(`找不到報告內容，請先開啟${UI.reportName}頁`);
+  fxFinish();document.body.classList.add('pdf-mode');
+  try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;window.scrollTo(0,0);
+    let marks=null;
+    const canvas=await html2canvas(docEl,{scale:1.5,logging:false,backgroundColor:tok('--pdf-bg','#fffdf7'),useCORS:true,windowWidth:1280,
+      ignoreElements:el=>!!(el.classList&&(el.classList.contains('no-print')||el.classList.contains('rough-annotation'))),
+      onclone:cd=>{const c=cd.getElementById('reportDoc');
+        /* html2canvas 會把畫面上 SVG 的計算尺寸寫死成 inline style；畫面寬度與 1280 不同時會撐破版面，移除後交回 CSS 計算 */
+        c.querySelectorAll('svg').forEach(s=>['width','height','inline-size','block-size','transform-origin','perspective-origin'].forEach(k=>s.style.removeProperty(k)));
+        const box=c.getBoundingClientRect();const rel=el=>el.getBoundingClientRect().top-box.top;
+        marks={w:box.width,force:[...c.querySelectorAll('.page-break')].map(rel),
+          cand:[...c.querySelectorAll('.report-section>*,.form-section,.field,tr,li,.dx-item,.kpi,.skbox')].map(rel)};}});
+    const W=canvas.width,Ht=canvas.height,k=marks&&marks.w?W/marks.w:1.5,pageH=Math.floor(W*277/190);
+    const force=(marks?marks.force:[]).map(v=>Math.round(v*k)).sort((a,b)=>a-b);
+    const cand=(marks?marks.cand:[]).map(v=>Math.round(v*k)).sort((a,b)=>a-b);
+    /* 斷頁：範圍內有強制分頁就用；否則取超過 4 成頁高後最後一個區塊起點；都沒有才硬切 */
+    const cuts=[0];let y=0;
+    while(y<Ht-4){const lim=y+pageH;const f=force.find(v=>v>y+20&&v<=lim&&v<Ht-20);let nx;
+      if(f!=null)nx=f;else if(lim>=Ht)nx=Ht;else{const c=cand.filter(v=>v>y+pageH*.4&&v<=lim);nx=c.length?c[c.length-1]:lim;}
+      cuts.push(nx);y=nx;}
+    const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:'portrait'});const n=cuts.length-1;
+    for(let i=0;i<n;i++){const sy=cuts[i],sh=cuts[i+1]-sy;const pc=document.createElement('canvas');pc.width=W;pc.height=sh;
+      const g=pc.getContext('2d');g.fillStyle=tok('--pdf-bg','#fffdf7');g.fillRect(0,0,W,sh);g.drawImage(canvas,0,sy,W,sh,0,0,W,sh);
+      if(i)pdf.addPage();pdf.addImage(pc.toDataURL('image/jpeg',.85),'JPEG',10,10,190,sh*190/W);
+      pdf.setFontSize(9);pdf.setTextColor(120);pdf.text(`${i+1} / ${n}`,200,292,{align:'right'});}
+    return pdf;
+  }finally{document.body.classList.remove('pdf-mode');}}
+async function savePDF(){if(_pdfBusy)return toast('PDF 產生中，請稍候');_pdfBusy=true;toast('正在產生 PDF，約需 5～15 秒…');
+  try{const pdf=await makePDF();pdf.save(pdfName());toast('PDF 已下載：'+pdfName());}
+  catch(e){console.error('PDF 產生失敗',e);toast('PDF 產生失敗：'+e.message,true);}
+  finally{_pdfBusy=false;}}
+
+/* ---------------- 寄送報告（Google Apps Script 轉寄；MAIL.endpoint 空白 = 尚未設定） ---------------- */
+function sendPlan(){const d=S.d(1)||{};const name=String(d.name||'').trim(),email=String(d.email||'').trim();
+  if(!MAIL.endpoint)return toast(`寄信尚未設定，請先下載 PDF 再交給${MAIL.toLabel}`,true);
+  if(!name)return toast('請先完成第 1 階段（姓名會當作信件主旨）',true);
+  const n=doneCount();
+  modal(`<h3>寄給${esc(MAIL.toLabel)}</h3><dl class="meta"><dt>信件主旨</dt><dd>${esc(name)}</dd><dt>你的 Email</dt><dd>${esc(email||'（未填）')}</dd><dt>完成階段</dt><dd>${n} / ${N_STAGES}</dd></dl>${n<N_STAGES?`<div class="note warn mt12">還有 ${N_STAGES-n} 個階段沒完成，寄出的是部分報告。建議全部完成再寄。</div>`:''}<p class="small muted mt12">信件會附上這份報告的 PDF；${esc(MAIL.toLabel)}可以直接回信到你的 Email。</p><div class="btn-row mt12"><button class="btn primary" id="sendGo" onclick="doSendPlan()">確認寄出</button><button class="btn" onclick="closeModal()">取消</button></div>`);}
+async function doSendPlan(){if(_pdfBusy)return;_pdfBusy=true;const btn=document.getElementById('sendGo');if(btn){btn.disabled=true;btn.textContent='寄送中…';}
+  const d=S.d(1)||{};const name=String(d.name||'').trim(),email=String(d.email||'').trim();
+  try{const pdf=await makePDF();const b64=pdf.output('datauristring').split(',')[1];
+    const res=await fetch(MAIL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({name,email,subject:name,filename:pdfName(),pdf:b64,done:doneCount(),total:N_STAGES})});
+    let j;try{j=await res.json();}catch(e){throw new Error('伺服器回應格式錯誤（HTTP '+res.status+'）');}
+    if(!res.ok||!j.ok)throw new Error(j.error||('HTTP '+res.status));
+    closeModal();toast(`已寄出，${MAIL.toLabel}會收到你的${UI.reportName}`);}
+  catch(e){console.error('寄送失敗',e);toast('寄送失敗：'+e.message+'。請改用下載 PDF',true);if(btn){btn.disabled=false;btn.textContent='確認寄出';}}
+  finally{_pdfBusy=false;}}
+
+/* ---------------- 開場說明（p5.js instance mode，無音效；第一次造訪自動播放） ---------------- */
+const INTRO_MS=7500;let _introI=0,_introP5=null,_introT=null,_introStart=0;
+const introSeenKey=()=>APP.storageKey+'_intro';
+function introMaybe(){const b=id=>document.getElementById(id);
+  b('introPrev').onclick=()=>introGo(_introI-1);
+  b('introNext').onclick=()=>_introI>=INTRO.length-1?introClose():introGo(_introI+1);
+  b('introSkip').onclick=introClose;
+  b('introDots').innerHTML=INTRO.map((x,i)=>`<i title="${i+1}. ${esc(x.t)}" onclick="introGo(${i})"></i>`).join('');
+  document.addEventListener('keydown',e=>{if(!b('intro').classList.contains('show'))return;
+    if(e.key==='Escape')introClose();else if(e.key==='ArrowRight')b('introNext').click();else if(e.key==='ArrowLeft')introGo(_introI-1);});
+  let seen=false;try{seen=localStorage.getItem(introSeenKey())==='1';}catch(e){console.warn('無法讀取開場說明紀錄',e);}
+  if(!seen)introOpen(0);}
+function introOpen(i){const el=document.getElementById('intro');el.classList.add('show');document.body.style.overflow='hidden';introGo(i||0);introStartSketch();}
+function introStartSketch(){const el=document.getElementById('intro');if(_introP5||!el.classList.contains('show'))return;
+  if(fxReduced()){el.classList.add('no-p5');return;}
+  if(typeof p5==='undefined'){if(document.readyState!=='complete'){window.addEventListener('load',introStartSketch,{once:true});return;}
+    console.warn('p5.js 未載入，開場說明改為純文字');el.classList.add('no-p5');return;}
+  el.classList.remove('no-p5');
+  try{_introP5=new p5(introSketch,document.getElementById('introStage'));}catch(e){console.warn('p5 開場動畫啟動失敗',e);el.classList.add('no-p5');}}
+function introGo(i){if(i<0||i>=INTRO.length)return;_introI=i;const x=INTRO[i],b=id=>document.getElementById(id),last=i===INTRO.length-1;
+  b('introNo').textContent=String(i+1).padStart(2,'0')+' / '+String(INTRO.length).padStart(2,'0');
+  b('introT').textContent=x.t;b('introS').textContent=x.s;
+  b('introNext').textContent=last?'開始填寫':'下一段';b('introPrev').disabled=i===0;
+  [...b('introDots').children].forEach((d,k)=>{d.className='';void d.offsetWidth;d.className=k<i?'done':k===i?'on'+(last?' hold':''):'';});
+  _introStart=performance.now();clearTimeout(_introT);
+  if(!last&&!fxReduced())_introT=setTimeout(()=>introGo(_introI+1),INTRO_MS);}
+function introClose(){clearTimeout(_introT);document.getElementById('intro').classList.remove('show');document.body.style.overflow='';
+  try{localStorage.setItem(introSeenKey(),'1');}catch(e){console.warn('無法記錄開場說明已看過',e);}
+  if(_introP5){_introP5.remove();_introP5=null;}}
+
+/* 手寫字型依 unicode-range 分片下載；先把開場畫面會用到的字送進 fonts.load，第一幕才不會閃備用字型 */
+function introGlyphs(){const fixed='方法說明為什麼要做操作指引怎麼填參考範例別人先看三張卡再動手規則扣分看得到原因主旨：你的姓名';
+  const s=JSON.stringify([INTRO,UI.slate,UI.reportName,APP.platform,STAGES.map(x=>x.title),THEME.labels])+(THEME.glyphs||'')+fixed;
+  return[...new Set([...s].filter(c=>c.charCodeAt(0)>127))].join('');}
+/* 手繪風場景：設計座標 800×380，等比縮放置中；線條每 4 格重抖一次（line boil）。
+   顏色與字型讀 THEME 色票；title、strip 等主題場景由 THEME.intro.scenes 提供，同名時覆寫下方通用場景 */
+function introSketch(p){const INK=tok('--ink','#2b2622'),RED=tok('--red','#c8553d'),YEL=tok('--yellow','#d9a23a'),GRN=tok('--green','#4f7d5c'),BLU=tok('--blue','#2f5d73'),GRAY=tok('--muted-2','#a3968a'),CARD=tok('--card','#fffcf5'),BG=tok('--paper','#f3ead8'),LINE=tok('--line','#d8ccb6');
+  const fam=v=>String(v||'').split(',')[0].trim().replace(/^["']|["']$/g,''),HAND=fam(tok('--hand'))||'LXGW WenKai TC',TYPE=fam(tok('--type'))||"Special Elite";
+  const host=()=>document.getElementById('introStage');let W=10,H=10;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),seg=(t,a,b)=>clamp((t-a)/(b-a),0,1),ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+  const boil=()=>Math.floor(p.frameCount/4);
+  /* wobbly line drawn up to fraction k */
+  const wl=(x1,y1,x2,y2,sd,k)=>{k=k==null?1:k;if(k<=0)return;p.noFill();const n=Math.max(2,Math.ceil(p.dist(x1,y1,x2,y2)/14));p.beginShape();
+    for(let i=0;i<=n;i++){const u=i/n*k;const jx=(p.noise(sd+i*.37,boil()*1.7)-.5)*3,jy=(p.noise(sd+40+i*.37,boil()*1.7)-.5)*3;p.vertex(p.lerp(x1,x2,u)+jx,p.lerp(y1,y2,u)+jy);}p.endShape();};
+  const wr=(x,y,w,h,sd,k,fc)=>{k=k==null?1:k;if(fc&&k>.9){p.push();p.noStroke();p.fill(fc);p.rect(x,y,w,h);p.pop();}const e=[[x,y,x+w,y],[x+w,y,x+w,y+h],[x+w,y+h,x,y+h],[x,y+h,x,y]];e.forEach((s,i)=>wl(s[0],s[1],s[2],s[3],sd+i*9,clamp(k*4-i,0,1)));};
+  const wc=(cx,cy,rx,ry,sd,k)=>{k=k==null?1:k;if(k<=0)return;p.noFill();const n=40;p.beginShape();for(let i=0;i<=n*k;i++){const a=i/n*p.TWO_PI-p.HALF_PI;const j=(p.noise(sd+i*.3,boil()*1.7)-.5)*4;p.vertex(cx+(rx+j)*Math.cos(a),cy+(ry+j)*Math.sin(a));}p.endShape();};
+  const hatch=(x,y,w,h,col,sd)=>{p.push();p.stroke(col);p.strokeWeight(1.4);for(let d=6;d<w+h;d+=7){const x1=x+Math.max(0,d-h),y1=y+Math.min(h,d),x2=x+Math.min(w,d),y2=y+Math.max(0,d-w);wl(x1,y1,x2,y2,sd+d,1);}p.pop();};
+  const check=(x,y,s,col,k,sd)=>{p.push();p.stroke(col);p.strokeWeight(3.2);wl(x,y,x+s*.35,y+s*.4,sd,seg(k,0,.4));wl(x+s*.35,y+s*.4,x+s,y-s*.45,sd+5,seg(k,.4,1));p.pop();};
+  const txt=(s,x,y,sz,col,al,font)=>{p.push();p.noStroke();p.fill(col);p.textFont(font||HAND);p.textSize(sz);p.textAlign(al||p.LEFT,p.BASELINE);p.text(s,x,y);p.pop();};
+  p.setup=()=>{W=host().clientWidth||10;H=host().clientHeight||10;p.createCanvas(W,H);p.frameRate(30);
+    if(document.fonts&&document.fonts.load)document.fonts.load(`24px "${HAND}"`,introGlyphs()).catch(e=>console.warn('開場字型載入失敗，改用備用字型',e));};
+  p.windowResized=()=>{W=host().clientWidth||10;H=host().clientHeight||10;p.resizeCanvas(W,H);};
+  const base={
+    cards:t=>{const u=ease(seg(t,.3,1.6)),L=[['方法說明','為什麼要做',RED],['操作指引','怎麼填',YEL],['參考範例','別人怎麼填',BLU]];
+      L.forEach((c,i)=>{const tx=400+(i-1)*230*u,rot=(i-1)*.1*u;p.push();p.translate(tx,200);p.rotate(rot);
+        wr(-95,-120,190,230,700+i*13,1,CARD);hatch(-93,-118,186,34,c[2],720+i*9);
+        txt(c[0],0,-62,24,INK,p.CENTER);txt(c[1],0,-34,15,GRAY,p.CENTER);
+        for(let r=0;r<4;r++)wl(-70,-6+r*24,-70+(r===3?80:140),-6+r*24,740+i*11+r,seg(t,1.7+i*.35+r*.12,2.1+i*.35+r*.12));
+        p.pop();});
+      txt('先看三張卡，再動手填',400,350,18,GRAY,p.CENTER);},
+    write:(t,q)=>{const mine=q.mine||'',shown=mine.slice(0,Math.floor(seg(t,1,4.6)*mine.length));
+      wr(150,60,500,270,800,ease(seg(t,0,.8)),CARD);
+      p.push();p.stroke(LINE);p.strokeWeight(1.2);for(let r=0;r<4;r++)wl(170,140+r*44,630,140+r*44,820+r,seg(t,.3,1));p.pop();
+      txt(q.label||'',172,98,16,RED);txt(shown,172,132,30,INK);
+      p.push();p.textFont(HAND);p.textSize(30);const tw=p.textWidth(shown);p.pop();
+      if(t<4.9){const px=172+tw+6,py=128;p.push();p.translate(px,py);p.rotate(-.75);wr(0,-7,70,14,850,1,YEL);p.fill(INK);p.noStroke();p.triangle(-14,0,0,-7,0,7);p.stroke(INK);wl(52,-7,52,7,860,1);p.pop();}
+      txt(q.example||'',172,184,17,GRAY);
+      if(t>4.9)check(560,112,28,GRN,seg(t,4.9,5.4),870);
+      if(t>5.4)txt(q.moral||'',400,300,18,RED,p.CENTER);},
+    check:(t,q)=>{const rows=(q.rows||[]).slice(0,4),bi=rows.findIndex(r=>r[1]==='bad');
+      rows.forEach((r,i)=>{const y=100+i*56+(bi>=0&&i>bi?24:0),k0=.6+i*.8;wr(90,y-26,40,40,900+i,1,CARD);txt(r[0],150,y+2,21,INK);
+        if(t>k0&&r[1]==='ok')check(98,y-4,24,GRN,seg(t,k0,k0+.35),910+i);
+        if(t>k0&&r[1]==='bad'){p.push();p.stroke(RED);p.strokeWeight(3);wc(270,y-6,200,26,930,ease(seg(t,k0,k0+.6)));p.pop();if(t>k0+.6)txt(q.badNote||'',150,y+42,15,RED);}});
+      const sc=Math.round((q.score||65)*ease(seg(t,.8,4.2))),a=p.PI+p.PI*sc/100;
+      p.beginShape();for(let i=0;i<=30;i++){const g=p.PI+p.PI*i/30,j=(p.noise(960+i*.3,boil()*1.7)-.5)*3;p.vertex(620+(110+j)*Math.cos(g),250+(110+j)*Math.sin(g));}p.endShape();wl(500,250,740,250,965,1);
+      p.push();p.stroke(RED);p.strokeWeight(4);wl(620,250,620+Math.cos(a)*90,250+Math.sin(a)*90,970,1);p.pop();
+      txt(String(sc),620,300,40,INK,p.CENTER,TYPE);txt('規則扣分，看得到原因',620,330,15,GRAY,p.CENTER);},
+    send:(t,q)=>{const u=ease(seg(t,1,4)),bx=(a,b,c,d,v)=>(1-v)**3*a+3*(1-v)**2*v*b+3*(1-v)*v*v*c+v**3*d;
+      wr(110,110,130,170,1000,ease(seg(t,0,.7)),CARD);hatch(112,112,126,30,RED,1010);
+      txt('PDF',175,138,20,INK,p.CENTER,TYPE);for(let r=0;r<5;r++)wl(130,170+r*20,220,170+r*20,1020+r,1);
+      txt(q.doc||UI.reportName,175,305,15,GRAY,p.CENTER);
+      const ex=560,ey=150,ew=170,eh=110,cl=seg(t,4.1,4.6);wr(ex,ey,ew,eh,1100,1,CARD);
+      wl(ex,ey+eh,ex+ew/2,ey+eh*.45,1110,1);wl(ex+ew,ey+eh,ex+ew/2,ey+eh*.45,1115,1);
+      const fy=p.lerp(ey-50,ey+eh*.55,cl);wl(ex,ey,ex+ew/2,fy,1120,1);wl(ex+ew,ey,ex+ew/2,fy,1125,1);
+      txt('主旨：你的姓名',ex+ew/2,ey+eh+34,17,INK,p.CENTER);
+      if(t>1&&cl<1){p.push();p.stroke(GRAY);p.strokeWeight(1.6);p.drawingContext.setLineDash([6,8]);p.noFill();p.beginShape();
+        for(let v=0;v<=u;v+=.02)p.vertex(bx(240,330,470,600,v),bx(190,30,40,175,v));p.endShape();p.drawingContext.setLineDash([]);p.pop();
+        const px=bx(240,330,470,600,u),py=bx(190,30,40,175,u),px2=bx(240,330,470,600,Math.min(1,u+.02)),py2=bx(190,30,40,175,Math.min(1,u+.02));
+        p.push();p.translate(px,py);p.rotate(Math.atan2(py2-py,px2-px));p.fill(CARD);p.stroke(INK);p.strokeWeight(2.2);p.triangle(22,0,-16,-13,-8,0);p.triangle(22,0,-16,11,-8,0);p.pop();}
+      if(cl>=1)check(ex+ew/2-14,ey+eh*.55,30,GRN,seg(t,4.6,5.1),1130);}};
+  const K={p,wl,wr,wc,hatch,check,txt,seg,ease,clamp,boil,C:{INK,RED,YEL,GRN,BLU,GRAY,CARD,BG,LINE},F:{hand:HAND,type:TYPE}};
+  const scenes={...base,...((THEME.intro||{}).scenes||{})};
+  p.draw=()=>{p.background(BG);const t=(performance.now()-_introStart)/1000,sc=Math.min(W/800,H/380);
+    p.push();p.translate((W-800*sc)/2,(H-380*sc)/2);p.scale(sc);p.noFill();p.stroke(INK);p.strokeWeight(2.4);p.strokeJoin(p.ROUND);p.strokeCap(p.ROUND);
+    txt(String(THEME.labels.introCorner||'').replace('{n}',String(_introI+1).padStart(2,'0')),14,24,13,RED,p.LEFT,TYPE);
+    const cur=INTRO[_introI]||{},f=scenes[cur.k];if(f)f(t,cur.p||{},K);p.pop();};}
+
+/* ---------------- 啟動 ---------------- */
+renderBrand();load();if(!location.hash&&STATE.view)location.hash=STATE.view;route();introMaybe();
+</script>
+</body>
+</html>
